@@ -1,0 +1,7 @@
+paras=108 tables=3
+[43] σ = F/S = Y·ΔL/L || runs=[('σ = ', False, None, None), ('F', True, None, None), ('/', False, None, None), ('S', True, None, None), (' = ', False, None, None), ('Y', True, None, None)]
+[46] Y = FL/(SΔL) = 4FL/(πd2ΔL) || runs=[('Y', True, None, None), (' = ', False, None, None), ('FL', True, None, None), ('/(', False, None, None), ('S', True, None, None), ('Δ', False, None, None)]
+[51] ΔL = K·N/(2D) || runs=[('Δ', False, None, None), ('L', True, None, None), (' = ', False, None, None), ('K', True, None, None), ('·', False, None, None), ('N', True, None, None)]
+[54] Y = 8FLD/(πd2KN) || runs=[('Y', True, None, None), (' = 8', False, None, None), ('FLD', True, None, None), ('/(π', False, None, None), ('d', True, None, None), ('2', False, False, True)]
+[57] N̄ = (1/4)Σ*i*=03(n*i*+4 − n*i*) || runs=[('N̄', True, None, None), (' = (1/4)Σ', False, None, None), ('*i*=0', False, True, False), ('3', False, False, True), ('(', False, None, None), ('n', True, None, None)]
+[60] Y = 4L/(πd2M) || runs=[('Y', True, None, None), (' = 4', False, None, None), ('L', True, None, None), ('/(π', False, None, None), ('d', True, None, None), ('2', False, False, True)]

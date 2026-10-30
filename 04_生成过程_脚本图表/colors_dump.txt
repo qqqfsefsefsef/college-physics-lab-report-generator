@@ -1,0 +1,181 @@
+--- P26 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=24.0 b=True color=494949 text=''
+--- P27 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=24.0 b=True color=494949 text='实验'
+   r1 font=宋体 sz=24.0 b=True color=494949 text='名称:'
+   r2 font=宋体 sz=12.0 b=True color=494949 text='  '
+   r3 font=宋体 sz=12.0 b=True color=494949 text=' '
+   r4 font=仿宋_GB2312 sz=16.0 b=True color=494949 text='  '
+   r5 font=华文行楷 sz=22.0 b=True color=000080 text='热膨胀系数'
+   r6 font=仿宋_GB2312 sz=16.0 b=True color=494949 text='  '
+   r7 font=None sz=12.0 b=None color=494949 text=' '
+   r8 font=None sz=12.0 b=None color=494949 text='   '
+   r9 font=宋体 sz=24.0 b=True color=494949 text='得分:'
+   r10 font=宋体 sz=12.0 b=True color=494949 text='  '
+   r11 font=仿宋_GB2312 sz=16.0 b=True color=494949 text='  '
+   r12 font=仿宋_GB2312 sz=16.0 b=True color=494949 text='  '
+   r13 font=仿宋_GB2312 sz=16.0 b=True color=494949 text=' '
+   r14 font=仿宋_GB2312 sz=16.0 b=True color=494949 text='  '
+--- P28 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r1 font=宋体 sz=12.0 b=None color=494949 text='   '
+   r2 font=宋体 sz=12.0 b=None color=494949 text='自动化'
+   r3 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r4 font=宋体 sz=12.0 b=None color=494949 text='   '
+   r5 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r6 font=宋体 sz=12.0 b=None color=494949 text='院  '
+   r7 font=宋体 sz=12.0 b=None color=494949 text='    '
+   r8 font=宋体 sz=12.0 b=None color=494949 text='机器人工程'
+   r9 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r10 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r11 font=宋体 sz=12.0 b=None color=494949 text='专业'
+   r12 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r13 font=宋体 sz=12.0 b=None color=494949 text='20'
+   r14 font=宋体 sz=12.0 b=None color=494949 text='25'
+   r15 font=宋体 sz=12.0 b=None color=494949 text='  '
+   r16 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r17 font=宋体 sz=12.0 b=None color=494949 text='年级 '
+   r18 font=宋体 sz=12.0 b=None color=494949 text='    '
+   r19 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r20 font=宋体 sz=12.0 b=None color=494949 text='一'
+   r21 font=宋体 sz=12.0 b=None color=494949 text='      '
+   r22 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r23 font=宋体 sz=12.0 b=None color=494949 text='班'
+--- P29 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='学号 '
+   r1 font=宋体 sz=12.0 b=None color=494949 text='  '
+   r2 font=宋体 sz=12.0 b=None color=494949 text='202583240016'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='    '
+   r4 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r5 font=宋体 sz=12.0 b=None color=494949 text='姓名 '
+   r6 font=宋体 sz=12.0 b=None color=494949 text='  '
+   r7 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r8 font=宋体 sz=12.0 b=None color=494949 text='李得源'
+   r9 font=宋体 sz=12.0 b=None color=494949 text='       '
+   r10 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r11 font=宋体 sz=12.0 b=None color=494949 text='  '
+   r12 font=宋体 sz=12.0 b=None color=494949 text='指导'
+   r13 font=宋体 sz=12.0 b=None color=494949 text='教师'
+   r14 font=宋体 sz=12.0 b=None color=494949 text=' '
+   r15 font=宋体 sz=12.0 b=None color=494949 text='   '
+   r16 font=宋体 sz=12.0 b=None color=494949 text='周凯'
+   r17 font=宋体 sz=12.0 b=None color=494949 text='      '
+   r18 font=宋体 sz=12.0 b=None color=494949 text=' '
+--- P30 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='实验目的'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='】1'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='0'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='%'
+--- P31 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='1、学习测量固体的线膨胀系数。'
+--- P32 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='2、学习PID 调节的原理。'
+--- P33 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【实验仪器】'
+--- P34 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='金属线膨胀实验仪，温控实验仪，千分表'
+--- P35 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='实验原理'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='】1'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='0'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='%'
+   r5 font=宋体 sz=12.0 b=None color=FF0000 text='(可以拷贝网上文字，最好在理解基础上有所删减，不需完全拷贝。需要有实验相关重要的公式及图形。建议手动输入公式，不能粘贴公式图片'
+   r6 font=宋体 sz=12.0 b=None color=FF0000 text='。)'
+--- P36 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='1.线膨胀系数'
+--- P37 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=''
+   r1 font=宋体 sz=12.0 b=None color=494949 text='固体受热后的长度工和温度1之间的关系'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='为:'
+--- P38 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=''
+   r1 font=宋体 sz=12.0 b=None color=494949 text='式中L为温度1=0℃时的长度，α、β……是和被测物质有关的数值很小的常数，而β以后的各系数和α相比甚小，所以常温下可以忽略，则上式可写成：'
+--- P39 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=''
+   r1 font=宋体 sz=12.0 b=None color=494949 text=''
+   r2 font=宋体 sz=12.0 b=None color=494949 text='式中α就是固体的线膨胀系数，其物理意义为温度每升高一度时物体的伸长量与它在零度时的长度比，单位是摄氏度分之一。设在温度为时固体的长度为'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='L'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='，在温度为'
+   r5 font=宋体 sz=12.0 b=None color=494949 text='t'
+   r6 font=宋体 sz=12.0 b=None color=494949 text='2'
+   r7 font=宋体 sz=12.0 b=None color=494949 text='时固体的长度为'
+   r8 font=宋体 sz=12.0 b=None color=494949 text='L2'
+   r9 font=宋体 sz=12.0 b=None color=494949 text='，则'
+   r10 font=宋体 sz=12.0 b=None color=494949 text='有'
+   r11 font=宋体 sz=12.0 b=None color=494949 text=':'
+--- P40 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='联立'
+   r1 font=宋体 sz=12.0 b=None color=494949 text='(3)'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='、'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='(4)'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='式可得：'
+   r5 font=宋体 sz=12.0 b=None color=494949 text=''
+--- P85 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='有教师签字的原始数据记录照片（请竖排粘贴）'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='】1'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='0'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='%'
+--- P86 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=''
+--- P87 style=Normal align=None
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='数据处理及结果'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='】2'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='0'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='%  '
+   r5 font=宋体 sz=12.0 b=None color=FF0000 text='('
+   r6 font=宋体 sz=12.0 b=None color=FF0000 text='此处的表格要与原始数据记录页的表格一致；表格中的数据要与原始数据记录页中的数据一致；表格后处理'
+   r7 font=宋体 sz=12.0 b=None color=FF0000 text='数据,'
+   r8 font=宋体 sz=12.0 b=None color=FF0000 text='要有主要的处理过程；要求用作图法处理的可以插入画好图的坐标'
+   r9 font=宋体 sz=12.0 b=None color=FF0000 text='纸,'
+   r10 font=宋体 sz=12.0 b=None color=FF0000 text='推荐电脑作图；处理的中间结果应多保留1-2位，最终结果表示应符合有效数字规则和不确定度位数要求；计算中要特别注意单位的换算和书写'
+   r11 font=宋体 sz=12.0 b=None color=FF0000 text='。)'
+--- P88 style=Normal align=None
+   r0 font=宋体 sz=12.0 b=True color=494949 text='表'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='1 数据'
+   r2 font=宋体 sz=12.0 b=True color=494949 text='记录表'
+--- P89 style=Normal align=None
+   r0 font=None sz=None b=None color=THEME:None text=''
+--- P90 style=Normal align=None
+   r0 font=宋体 sz=12.0 b=None color=494949 text='=0.0000167'
+--- P91 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='分析及体会'
+   r2 font=宋体 sz=12.0 b=None color=494949 text='】2'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='0'
+   r4 font=宋体 sz=12.0 b=None color=494949 text='%'
+   r5 font=宋体 sz=12.0 b=None color=FF0000 text='（以“我”为主语，描述本次实验的感受。比如实验结果出现异常时分析原因；将本实验内容进行拓展，证明自己联系了日常生活，如解释现象、识别谣言等；或证明自己能够联系其他知识，可以类比、比较、分类、解释、列举等；或证明自己能够设想知识可能的应用情景；或证明自己能够提出实际问题的解决方案；或任意有新意脑洞大开的实验分析，不计空格字符数统计不小于'
+   r6 font=宋体 sz=12.0 b=None color=FF0000 text='300'
+   r7 font=宋体 sz=12.0 b=None color=FF0000 text='字）'
+--- P92 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='我通过本次热膨胀系数实验，完成了固体线膨胀系数的测定，也直观观测了 PID 温控系统的完整工作过程，既锻炼了精密测量的实验操作能力，也对热膨胀原理和自动调节规律有了更具象、更深入的理解。'
+--- P93 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='实验操作的过程让我切实体会到了精密测量的严谨性。一开始调试仪器时，我先是检查水位并及时补水，再调整千分表与金属棒的接触预压，反复确认千分表读数稳定在合适的初始值，生怕接触不良或者预压过大影响后续测量。升温过程中我严格遵守操作要求，不触碰实验台和仪器，避免震动干扰千分表的示数，每一次温度达到平衡后，都等示数稳定几秒再记录数据。这些看似琐碎的细节，恰恰是保证微小伸长量测量准确的关键，也让我养成了规范操作的实验习惯。'
+--- P94 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='从数据结果来看，随着温度逐步升高，金属棒的伸长量与温度变化整体呈现良好的线性关系，计算得到的线膨胀系数处于常见金属材料的合理数值区间，验证了小温度范围内线膨胀系数近似为常数的结论。我也对实验误差来源做了分析：一是系统的热惯性，即使循环水温达到平衡，金属棒内部仍可能存在微小的径向温差，导致实际平均温度与测量水温有偏差；二是千分表的读数误差，平衡状态下温度的微小波动会带动千分表指针小幅跳动，带来读数的偶然误差；三是金属棒固定端的微小形变，也会给伸长量的测量引入系统误差。'
+--- P95 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='这次实验让我印象最深的，是能把物理原理和生活、专业知识联系起来。热膨胀现象其实无处不在：铁路钢轨之间预留伸缩缝、大跨度桥梁设置伸缩装置，都是为了抵消温度变化带来的热胀冷缩，避免结构变形损坏；冬天往厚玻璃杯中倒入沸水容易炸裂，正是因为玻璃内壁受热快速膨胀，外壁升温慢膨胀量小，不均匀的热膨胀产生了巨大内应力。结合我所学的机器人工程专业，高精度工业机器人的连杆、导轨会因为环境温度变化产生热膨胀，直接影响末端执行器的定位精度，因此高端工业机器人都会内置多组温度传感器，通过线膨胀系数模型对热误差进行实时补偿。这让我真切感受到，基础物理原理不是书本上的抽象公式，而是解决工程实际问题的核心依据。'
+--- P96 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='除此之外，PID 温控系统也让我收获很大。之前我只在课本上见过 PID 的公式，对三个调节环节的作用理解很模糊，这次通过观察温控过程的温度变化曲线，直观看到了升温时的超调量、过渡时间和最终的静态偏差，也真正理解了比例、积分、微分三个环节的作用：比例调节能快速响应偏差，但无法消除静态误差；积分调节可以最终消除静差，却会增大超调量；微分调节能抑制温度变化的趋势，减小超调、提升系统稳定性。这也和我后续要学习的自动控制原理课程形成了呼应，机器人的关节位置控制、运动轨迹跟踪都离不开 PID 算法，这次物理实验相当于让我提前在实际系统中认识了 PID，为后续的专业学习打下了很好的实践基础。'
+--- P97 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='总的来说，这次实验不只是完成了一个测量任务，更让我学会了从实验现象出发，深挖背后的物理本质，主动思考知识在生活和工程中的应用场景。我也体会到，越是精密的实验，越要关注每一个操作细节，严谨的实验态度才能得到可靠的实验结果。'
+--- P98 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='热膨胀系数实验的操作步骤是什么？'
+--- P99 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='如何减少热膨胀系数实验中的误差？'
+--- P100 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='热膨胀系数实验在实际生活中有哪些应用？'
+--- P101 style=Normal align=LEFT (0)
+--- P102 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text='【'
+   r1 font=宋体 sz=12.0 b=True color=494949 text='超星平台本实验在线练习得分截图'
+   r2 font=宋体 sz=12.0 b=True color=494949 text='（请竖排粘贴）'
+   r3 font=宋体 sz=12.0 b=None color=494949 text='】5%'
+--- P103 style=Normal align=LEFT (0)
+   r0 font=宋体 sz=12.0 b=None color=494949 text=''
+   r1 font=宋体 sz=12.0 b=None color=494949 text='\xa0'
+--- P104 style=Normal align=None
+sectPr: start_type=NEW_PAGE (2), w=7560310 h=10692130

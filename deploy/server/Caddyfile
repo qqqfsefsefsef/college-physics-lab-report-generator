@@ -1,0 +1,40 @@
+# 一个域名同时管两件事：
+#   ① 静态页面（/prototype_v2.html）
+#   ② /api/* 反代给识别桥（bridge:8732），于是前端只认一个 origin，没有 CORS、没有第二个端口
+#
+# {$SITE_ADDR}  有域名 → report.example.com（Caddy 自动申请免费 HTTPS）
+#               只有 IP → :80（纯 http，墙内也能用，但没有 HTTPS）
+# {$BRIDGE_UPSTREAM}  Docker 里是 bridge:8732；裸机 systemd 是 127.0.0.1:8732
+{$SITE_ADDR} {
+	encode gzip
+
+	# 打开域名直接进页面，省得记住文件名
+	redir / /prototype_v2.html
+
+	handle_path /api/* {
+		reverse_proxy {$BRIDGE_UPSTREAM} {
+			# 别让一次识别请求被反代提前掐断（视觉模型偶尔要 60s+）
+			transport http {
+				read_timeout 300s
+				write_timeout 300s
+			}
+		}
+	}
+
+	handle {
+		root * /srv/web
+		file_server
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	# 日志走 stdout，`docker compose logs -f web` 就能看，不依赖容器内目录权限
+	log {
+		output stdout
+		format console
+	}
+}

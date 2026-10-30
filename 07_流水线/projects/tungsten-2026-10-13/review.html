@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>核对清单 · 钨的逸出功测定</title>
+<style>
+body{font-family:"Microsoft YaHei",system-ui,sans-serif;margin:28px;color:#2b3440;background:#fbfcfe}
+h1{font-size:20px;margin:0 0 6px}
+.sub{color:#6b7785;font-size:13px;margin-bottom:18px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}
+th,td{border:1px solid #dbe3ef;padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#f1f5fb}
+.gate{padding:10px 14px;border-radius:8px;margin:16px 0;font-size:13px;
+      background:#fff6e5;color:#8a5a00;border:1px solid #f0d9a8}
+code{background:#f3f5f9;padding:1px 4px;border-radius:3px;font-size:12px}
+</style></head><body>
+<h1>核对清单 · 钨的逸出功测定</h1>
+<div class="sub">项目 <code>tungsten-2026-10-13</code> · 实验 <code>tungsten</code> · 生成时间 2026-10-27 11:48:31 · 共 3 条</div>
+<div class="gate">未确认——计算与导出会被拦下</div>
+<table><thead><tr><th>级别</th><th>位置</th><th>问题</th><th>当前值</th><th>编号</th><th>建议</th></tr></thead>
+<tbody><tr><td style="color:#b8860b;white-space:nowrap">建议确认</td><td>表1 第 6 行（I_f=0.725）U_a=144</td><td>读数比左边一格小（431.0 < 447.0），可能是抄录或末位跳动</td><td>431.0</td><td><code>mono-t1-r5c7</code></td><td><code>确认是否应为 447.0</code></td></tr>
+<tr><td style="color:#b8860b;white-space:nowrap">建议确认</td><td>表2 第 6 行（T=2.08）√U_a=12</td><td>与 lg(表1) 差 0.016（表1→2.634，记录→2.65）</td><td>2.65</td><td><code>t2-r5c7</code></td><td><code>按表1 应为 2.634</code></td></tr>
+<tr><td style="color:#2c7fb8;white-space:nowrap">仅提示</td><td>表3 第 3→4 行</td><td>第 4 行 = 第 3 行 − 2lg(T/10³)，恒差 0.60（=2lg1000）；只平移截距，不影响斜率与 eφ</td><td>[0.54, 0.56, 0.58]</td><td><code>offset-6</code></td><td><code>保留原始写法，正文注明即可</code></td></tr></tbody></table>
+<div class="sub" style="margin-top:18px">确认后执行：<code>python pipeline.py confirm --slug tungsten-2026-10-13 --all --note "已逐格核对"</code></div>
+</body></html>

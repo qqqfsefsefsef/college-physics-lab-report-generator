@@ -1,0 +1,52 @@
+{
+  "exp": "young",
+  "exp_name": "用静态拉伸法测金属丝的杨氏弹性模量",
+  "title": "用静态拉伸法测金属丝的杨氏弹性模量",
+  "date": "2026-10-27",
+  "created": "2026-10-27 12:39:20",
+  "formats": [
+    "docx"
+  ],
+  "gate": {
+    "confirmed": true,
+    "at": "2026-10-27 12:39:36",
+    "by": "示例数据，已核对",
+    "decisions": {
+      "accept_all": true
+    },
+    "blocked_before": []
+  },
+  "steps": {
+    "import": {
+      "at": "2026-10-27 12:39:36",
+      "src": "young_synthetic.json"
+    },
+    "review": {
+      "at": "2026-10-27 12:39:21",
+      "findings": 0,
+      "block": 0
+    },
+    "render": {
+      "at": "2026-10-28 14:01:04",
+      "formats": [
+        "docx"
+      ],
+      "files": [
+        "杨氏模量.docx"
+      ]
+    },
+    "calc": {
+      "at": "2026-10-27 12:40:24",
+      "summary": "Y = 2.0166e+11 Pa（2.017×10¹¹），u(Y)/Y = 2.84%，误差 +0.83%"
+    }
+  },
+  "versions": {
+    "pipeline": "0.1",
+    "calc": "young",
+    "template": "热膨胀系数.docx"
+  },
+  "model": {
+    "read": "stub/manual",
+    "write": "stub/manual"
+  }
+}

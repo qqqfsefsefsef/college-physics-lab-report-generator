@@ -1,0 +1,168 @@
+{
+ "id": "tungsten",
+ "no": "实验 53",
+ "name": "钨的逸出功测定",
+ "title": "钨的逸出功测定",
+ "calc": "tungsten",
+ "render_key": "tungsten",
+ "content": "04_生成过程_脚本图表\\content_tungsten.md",
+ "shot": "01_素材_数据与截图/Screenshot_2026-10-26-22-19-51-481_com.chaoxing.m.jpg",
+ "accepted_value_eV": 4.54,
+ "constants": {
+  "k_J_per_K": 1.3806505e-23,
+  "e_C": 1.602e-19,
+  "T_calibration": "T = 920.0 + 1600*I_f"
+ },
+ "paradigm": "richardson_line",
+ "tables": [
+  {
+   "id": "t1",
+   "caption": "表1 不同灯丝电流 I_f 和阳极电压 U_a 对应的阳极电流 I_a 值",
+   "unit_note": "I_a/μA, U_a/V, I_f/A",
+   "shape": [
+    8,
+    8
+   ],
+   "rows": "I_f = 0.600 … 0.775 A（步长 0.025）",
+   "cols": "U_a = 25 36 49 64 81 100 121 144 V"
+  },
+  {
+   "id": "t2",
+   "caption": "表2 不同温度 T 和 √U_a 下对应的阳极电流的对数值 lg I_a",
+   "unit_note": "lg I_a, √U_a（V^{1/2}）, T/10³K",
+   "shape": [
+    8,
+    8
+   ],
+   "rows": "T = 1.88 … 2.16 ×10³K",
+   "cols": "√U_a = 5.0 … 12.0"
+  },
+  {
+   "id": "t3",
+   "caption": "表3 lg(I_s/T²) — 1/T 数据表",
+   "unit_note": "1/T（×10⁻³K⁻¹）, lg I_s, lg(I_s/T²)",
+   "shape": [
+    4,
+    8
+   ],
+   "rows": "T / 1/T / lg I_s / lg(I_s/T²)",
+   "cols": "8 个温度点"
+  }
+ ],
+ "figures": [
+  {
+   "id": "f1",
+   "caption": "实验线路原理示意图",
+   "src": "fig_w_wiring.png"
+  },
+  {
+   "id": "f2",
+   "caption": "阴极温度与灯丝电流的关系",
+   "src": "fig_w_tcal.png"
+  },
+  {
+   "id": "f3",
+   "caption": "不同灯丝电流下的阳极电流—阳极电压曲线",
+   "src": "figures_tungsten/fig_w1.png"
+  },
+  {
+   "id": "f4",
+   "caption": "lg I_a–√U_a 外推求 lg I_s",
+   "src": "figures_tungsten/fig_w2.png"
+  },
+  {
+   "id": "f5",
+   "caption": "lg(I_s/T²)–1/T 直线",
+   "src": "figures_tungsten/fig_w3.png"
+  }
+ ],
+ "errata": [
+  "表2 印刷只有 7 行（1.88~2.12），实际第 8 行 T=2.16×10³K 的 lg I_a 被学生写在表格框线外，需补一行标签。",
+  "表3 第 4 行按学生记录恒比 lg I_s 高 6.000（=2lg1000，用了 T/10³K），只平移截距，不影响斜率与 eφ。",
+  "讲义未给 I_f→T 的换算表时可用 T = 920.0 + 1600 I_f 反查。"
+ ],
+ "questions": 4,
+ "prose_sections": [
+  "原理1",
+  "原理2",
+  "原理3",
+  "原理4",
+  "仪器",
+  "步骤",
+  "数据说明",
+  "体会",
+  "思考题"
+ ],
+ "kpi": [
+  {
+   "label": "逸出功 eφ / eV",
+   "key": "phi_eV",
+   "digits": 3
+  },
+  {
+   "label": "与公认值 4.54 的相对误差",
+   "key": "rel_err_pct",
+   "digits": 2,
+   "signed": true,
+   "suffix": "%"
+  },
+  {
+   "label": "不确定度 u(eφ) / eV",
+   "key": "u_phi_eV",
+   "digits": 3
+  }
+ ],
+ "renderer": "ir",
+ "footer": "钨的逸出功",
+ "formulas": {
+  "F1": "*f*(*E*) = d*N*/d*E* = (4π/*h*³)(2*m*)^{3/2}*E*^{1/2}[exp((*E* − *E*_{F})/*kT*) + 1]^{−1}",
+  "F2": "*E*_{0} = *E*_{b} − *E*_{F} = *eφ*",
+  "F3": "*I* = *AST*²exp(−*eφ*/*kT*)",
+  "F4": "lg(*I*/*T*²) = lg*AS* − *eφ*/(2.30*kT*) = lg*AS* − 5.04×10³*φ*/*T*",
+  "F5": "*I*_{a} = *I*·exp(0.439√*E*_{a}/*T*)",
+  "F6": "lg*I*_{a} = lg*I* + 0.439√*E*_{a}/(2.30*T*)",
+  "F7": "*E*_{a} = *U*_{a}/(*r*₁ln(*r*₂/*r*₁))",
+  "F8": "lg*I*_{a} = lg*I* + [0.439/(2.30*T*)]√(*U*_{a}/(*r*₁ln(*r*₂/*r*₁)))",
+  "F9": "*T* = 920.0 + 1600*I*_{f}"
+ },
+ "u_a_V": [
+  25,
+  36,
+  49,
+  64,
+  81,
+  100,
+  121,
+  144
+ ],
+ "i_f_A": [
+  0.6,
+  0.625,
+  0.65,
+  0.675,
+  0.7,
+  0.725,
+  0.75,
+  0.775
+ ],
+ "sqrt_u_a": [
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12
+ ],
+ "T_1000K": [
+  1.88,
+  1.92,
+  1.96,
+  2.0,
+  2.04,
+  2.08,
+  2.12,
+  2.16
+ ]
+}

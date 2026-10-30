@@ -1,0 +1,263 @@
+[user]
+<acp tokens="63" type="text">m01066</acp>
+我为啥在生成报告那一栏卡住不跳转了，然后就是我每次点测试连接都要反应，不是只反映一次，有些用户没写api就会去点那个按钮，会导致无法跳转
+
+[user]
+<acp tokens="66" type="text">m01067</acp>
+Time sampled while preparing turn 20, step 1: 2026-10-28T15:13:19+08:00[Asia/Shanghai]
+Browser time zone for this request: Asia/Shanghai. Interpret otherwise-unqualified dates and times in this zone.
+Elapsed since the preceding model-visible message: 1h 10m 33s.
+
+[assistant]
+
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"    <h2>上传素材</h2>\n    <p class=\"lead\">识别出实验类型、收齐三类文件，然后选输出格式。</p>\n    <div class=\"okbox\" id=\"demo-banner\" style=\"display:none;margin-bottom:14px\">\n      示例模式：用内置的一组示例数据跑通流程，不用上传照片、不消耗额度。<b>生成的报告会标注「示例数据」</b>，不能直接提交。\n    </div>","old_string":"    <h2>上传素材</h2>\n    <p class=\"lead\">识别出实验类型、收齐三类文件，然后选输出格式。</p>"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.
+
+[assistant]
+Now the JS. Replace testConn and add nextFromApi, useDemo, startGen, syncGen tweak, fillResult tweak.
+
+Current testConn:
+```js
+function testConn() {
+  var u = $('api-url').value.trim(), m = $('api-model').value.trim(), k = $('api-key').value.trim();
+  var box = $('api-msg'), st = $('api-status');
+  if (!u || !m || !k) {
+    box.innerHTML = '<div class="badbox">三项都要填。</div>';
+    return;
+  }
+  st.textContent = '测试中…';
+  $('api-next').disabled = true;
+  setTimeout(function () {
+    ...
+    $('api-next').disabled = false;
+  }, 900);
+}
+```
+
+Replace whole function with a new block including caching + callback + guards. I need the exact text; let me replace from "function testConn() {" to the closing "}" before "/* ---------- S3 ---------- */". I'll use a generous old_string matching the whole function as written earlier.
+
+Let me write the replacement:
+
+```js
+var TESTING = false;
+var API_SIG = '';                       /* 最近一次通过的参数指纹 */
+
+function apiSig() {
+  return [$('api-url').value.trim(), $('api-model').value.trim(), $('api-key').value.trim()].join('|');
+}
+function apiFields() {
+  return { u: $('api-url').value.trim(), m: $('api-model').value.trim(), k: $('api-key').value.trim() };
+}
+function nextFromApi() {
+  var f = apiFields(), box = $('api-msg');
+  box.innerHTML = '';
+  if (!f.u || !f.m || !f.k) {
+    box.innerHTML = '<div class="badbox">三项都填了才能继续：接口地址、模型名、密钥。没密钥也可以点下面的「用示例数据体验」。</div>';
+    var first = !f.u ? $('api-url') : (!f.m ? $('api-model') : $('api-key'));
+    first.focus();
+    return;
+  }
+  if (STATE.api.tested && apiSig() === API_SIG) { go('s-upload'); return; }
+  testConn(function () { go('s-upload'); });   /* 没测过就先自动测一次 */
+}
+function testConn(after) {
+  var f = apiFields(), box = $('api-msg'), st = $('api-status'), btn = $('btn-test');
+  if (TESTING) return;                        /* 防连点 */
+  box.innerHTML = '';
+  if (!f.u || !f.m || !f.k) {
+    st.textContent = '未测试';
+    box.innerHTML = '<div class="badbox">三项都要填才能测试。</div>';
+    return;
+  }
+  if (STATE.api.tested && apiSig() === API_SIG) {   /* 同样的参数不重复测 */
+    st.textContent = '已通过 · 12ms · 16 tokens（未改动）';
+    box.innerHTML = '<div class="okbox">这组参数已经测过了，直接下一步就行。</div>';
+    if (after) after();
+    return;
+  }
+  TESTING = true;
+  btn.disabled = true;
+  btn.textContent = '测试中…';
+  st.textContent = '测试中…';
+  setTimeout(function () {
+    TESTING = false;
+    btn.disabled = false;
+    btn.textContent = '测试连接';
+    if (f.k.length < 12) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>密钥无效</b>：格式看起来不对（太短）。请回开放平台复制完整的 key。</div>';
+      return;
+    }
+    if (!/^https?:\/\//.test(f.u)) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>地址不通</b>：base_url 要以 http(s):// 开头，并指向兼容 OpenAI 格式的接口。</div>';
+      return;
+    }
+    if (!/vision|vl|image|v4/i.test(f.m)) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>模型不支持图片</b>：这个模型读不了照片，换一个能看图的模型。</div>';
+      return;
+    }
+    st.textContent = '通过 · 12ms · 16 tokens';
+    box.innerHTML = '<div class="okbox">连接成功：密钥有效、模型可用、支持图片输入。</div>';
+    STATE.api = { url: f.u, model: f.m, key: f.k, tested: true };
+    API_SIG = apiSig();
+    if (after) after();
+  }, 900);
+}
+function useDemo() {
+  STATE.demo = true;
+  STATE.files = { data: true, hw: true, shot: false };
+  $('demo-banner').style.display = 'block';
+  $('cost').textContent = '示例模式：不调用模型，也不消耗额度';
+  syncGen();
+  go('s-upload');
+  toast('已切换到示例模式');
+}
+```
+
+Note: `$('cost')` exists in upload screen ✓.
+
+Also STATE.demo initial false — add to STATE object? I can just set it dynamically; but STATE object literal earlier lacks demo. Setting STATE.demo=true works (JS allows adding).
+
+syncGen: modify to respect demo:
+```js
+function syncGen() {
+  if (STATE.demo) { $('btn-gen').disabled = false; $('gen-hint').textContent = '示例模式：可以直接生成'; return; }
+  ...
+}
+```
+
+startGen:
+```js
+function startGen() {
+  if (!STATE.demo && !(STATE.files.data && STATE.files.hw)) { syncGen(); toast('先把必填的两项传上来'); return; }
+  go('s-review');
+}
+```
+
+fillResult: append 示例数据 marker:
+```js
+$('res-sub').textContent = STATE.exp + ' · ' + ... + (STATE.demo ? ' · 示例数据（不能直接提交）' : '');
+```
+Let me patch fillResult's line.
+
+Also the 下载 toast: mention demo. Optional.
+
+Let me apply edits: replace testConn function entirely; replace syncGen; replace startGen (need to add it since missing); patch fillResult.
+
+The button in HTML still calls startGen() ✓ (already there).
+
+Let me do these with edit calls.
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"/* ---------- S2 ---------- */\nvar TESTING = false;\nvar API_SIG = '';                        /* 最近一次通过的参数指纹 */\n\nfunction apiSig() {\n  return [$('api-url').value.trim(), $('api-model').value.trim(), $('api-key').value.trim()].join('|');\n}\nfunction apiFields() {\n  return { u: $('api-url').value.trim(), m: $('api-model').value.trim(), k: $('api-key').value.trim() };\n}\nfunction nextFromApi() {\n  var f = apiFields(), box = $('api-msg');\n  box.innerHTML = '';\n  if (!f.u || !f.m || !f.k) {\n    box.innerHTML = '<div class=\"badbox\">三项都填了才能继续：接口地址、模型名、密钥。没有密钥也可以点下面的「用示例数据体验」，先把流程走完。</div>';\n    var first = !f.u ? $('api-url') : (!f.m ? $('api-model') : $('api-key'));\n    if (first && first.focus) first.focus();\n    return;\n  }\n  if (STATE.api.tested && apiSig() === API_SIG) { go('s-upload'); return; }\n  testConn(function () { go('s-upload'); });      /* 没测过就当点「下一步」时自动补测一次 */\n}\nfunction testConn(after) {\n  var f = apiFields(), box = $('api-msg'), st = $('api-status'), btn = $('btn-test');\n  if (TESTING) return;                            /* 连点只跑一次 */\n  box.innerHTML = '';\n  if (!f.u || !f.m || !f.k) {\n    st.textContent = '未测试';\n    box.innerHTML = '<div class=\"badbox\">三项都要填才能测试。</div>';\n    return;\n  }\n  if (STATE.api.tested && apiSig() === API_SIG) {  /* 参数没变就不再打一遍网络请求 */\n    st.textContent = '已通过 · 未改动';\n    box.innerHTML = '<div class=\"okbox\">这组参数已经测过了，直接下一步就行。</div>';\n    if (after) after();\n    return;\n  }\n  TESTING = true;\n  btn.disabled = true;\n  btn.textContent = '测试中…';\n  st.textContent = '测试中…';\n  setTimeout(function () {\n    TESTING = false;\n    btn.disabled = false;\n    btn.textContent = '测试连接';\n    if (f.k.length < 12) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>密钥无效</b>：格式看起来不对（太短）。请回开放平台复制完整的 key。</div>';\n      return;\n    }\n    if (!/^https?:\\/\\//.test(f.u)) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>地址不通</b>：base_url 要以 http(s):// 开头，并指向兼容 OpenAI 格式的接口。</div>';\n      return;\n    }\n    if (!/vision|vl|image|v4/i.test(f.m)) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>模型不支持图片</b>：这个模型读不了照片，换一个能看图的模型。</div>';\n      return;\n    }\n    st.textContent = '通过 · 12ms · 16 tokens';\n    box.innerHTML = '<div class=\"okbox\">连接成功：密钥有效、模型可用、支持图片输入。</div>';\n    STATE.api = { url: f.u, model: f.m, key: f.k, tested: true };\n    API_SIG = apiSig();\n    if (after) after();\n  }, 900);\n}\nfunction useDemo() {\n  STATE.demo = true;\n  STATE.files = { data: true, hw: true, shot: false };\n  var b = $('demo-banner');\n  if (b) b.style.display = 'block';\n  var c = $('cost');\n  if (c) c.textContent = '示例模式：不调用模型，也不消耗额度';\n  syncGen();\n  go('s-upload');\n  toast('已切到示例模式，可以直接生成');\n}","old_string":"/* ---------- S2 ---------- */\nfunction togglePwd() {\n  var k = $('api-key');\n  k.type = (k.type === 'password') ? 'text' : 'password';\n}\nfunction testConn() {\n  var u = $('api-url').value.trim(), m = $('api-model').value.trim(), k = $('api-key').value.trim();\n  var box = $('api-msg'), st = $('api-status');\n  if (!u || !m || !k) {\n    box.innerHTML = '<div class=\"badbox\">三项都要填。</div>';\n    return;\n  }\n  st.textContent = '测试中…';\n  $('api-next').disabled = true;\n  setTimeout(function () {\n    if (k.length < 12) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>密钥无效</b>：格式看起来不对（太短）。请回到开放平台复制完整的 key。</div>';\n      return;\n    }\n    if (!/^https?:\\/\\//.test(u)) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>地址不通</b>：base_url 需要以 http(s):// 开头，并且指向兼容 OpenAI 格式的接口。</div>';\n      return;\n    }\n    if (!/vision|vl|image|v4/i.test(m)) {\n      st.textContent = '失败';\n      box.innerHTML = '<div class=\"badbox\"><b>模型不支持图片</b>：这个模型读不了照片，本工具需要能看图的模型。</div>';\n      return;\n    }\n    st.textContent = '通过 · 12ms · 16 tokens';\n    box.innerHTML = '<div class=\"okbox\">连接成功：模型可用、密钥有效、支持图片输入。</div>';\n    STATE.api = { url: u, model: m, key: k, tested: true };\n    $('api-next').disabled = false;\n  }, 900);\n}"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.
+
+[assistant]
+Oops — I removed `togglePwd()` in the replacement! The "显示" button calls togglePwd(). I must re-add it.
+
+Also need: syncGen demo branch, startGen function, fillResult demo marker.
+
+Let me add togglePwd back before apiSig, and patch the rest.
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"/* ---------- S2 ---------- */\nvar TESTING = false;\nvar API_SIG = '';                        /* 最近一次通过的参数指纹 */\n\nfunction togglePwd() {\n  var k = $('api-key');\n  k.type = (k.type === 'password') ? 'text' : 'password';\n}","old_string":"/* ---------- S2 ---------- */\nvar TESTING = false;\nvar API_SIG = '';                        /* 最近一次通过的参数指纹 */"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.
+
+[assistant]
+
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"function syncGen() {\n  if (STATE.demo) {\n    $('btn-gen').disabled = false;\n    $('gen-hint').textContent = '示例模式：可以直接生成';\n    return;\n  }\n  var need = [];\n  if (!STATE.files.data) need.push('原始数据页');\n  if (!STATE.files.hw) need.push('以前的作业');\n  var ok = need.length === 0;\n  $('btn-gen').disabled = !ok;\n  $('gen-hint').textContent = ok ? '齐了，可以生成' : ('还差：' + need.join('、'));\n}\nfunction startGen() {\n  if (!STATE.demo && !(STATE.files.data && STATE.files.hw)) {\n    syncGen();\n    toast('先把必填的两项传上来（或用示例数据体验）');\n    return;\n  }\n  go('s-review');\n}","old_string":"function syncGen() {\n  var need = [];\n  if (!STATE.files.data) need.push('原始数据页');\n  if (!STATE.files.hw) need.push('以前的作业');\n  var ok = need.length === 0;\n  $('btn-gen').disabled = !ok;\n  $('gen-hint').textContent = ok ? '齐了，可以生成' : ('还差：' + need.join('、'));\n}"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.
+
+[assistant]
+
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"  $('res-sub').textContent = STATE.exp + ' · ' + new Date().toISOString().slice(0, 10) +\n    ' · ' + fmtList() + (STATE.regenerated ? ' · 第 ' + (STATE.regenerated + 1) + ' 版' : '') +\n    (STATE.demo ? ' · 示例数据（不能直接提交）' : '');","old_string":"  $('res-sub').textContent = STATE.exp + ' · ' + new Date().toISOString().slice(0, 10) +\n    ' · ' + fmtList() + (STATE.regenerated ? ' · 第 ' + (STATE.regenerated + 1) + ' 版' : '');"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.
+
+[assistant]
+
+
+[assistant • pwsh]
+{"command":"$node='C:\\Program Files\\nodejs\\node.exe'\nSet-Location 'C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案'\n& $node tests\\check_v2.js 2>&1 | Out-String -Width 160\n& $node -e \"const fs=require('fs');const h=fs.readFileSync('prototype_v2.html','utf8');const s=h.match(/<script>([\\s\\S]*?)<\\/script>/)[1];const need=['startGen','nextFromApi','testConn','useDemo','togglePwd','apiSig','syncGen','fillResult','buildReview','runGen','regen','doneClean'];let miss=need.filter(n=>!new RegExp('function '+n+'\\\\\\\\s*\\\\\\\\(').test(s));console.log(miss.length?'[FAIL] 缺函数: '+miss:'[OK] 12 个关键函数都在');const calls=[...h.matchAll(/onclick=\\\"([a-zA-Z_]+)\\(/g)].map(m=>m[1]);const und=[...new Set(calls)].filter(c=>!new RegExp('function '+c+'\\\\\\\\s*\\\\\\\\(').test(s)&&!new RegExp('var '+c+'\\\\\\\\s*=').test(s));console.log(und.length?'[FAIL]  onclick 调用了未定义函数: '+und:'[OK] 所有 onclick 都能解析到函数');\" 2>&1 | Out-String -Width 160","description":"Check syntax, formulas, and onclick targets"}
+
+[tool • pwsh]
+[stderr]
+����λ�� ��:4 �ַ�: 462
++ ... s:'[OK] 12 ���ؼ���������');const calls=[...h.matchAll(/onclick=\"([a-zA-Z_] ...
++                                                                  ~
+���Ի������ı�ĩβȱ�� ]��
+����λ�� ��:4 �ַ�: 463
++ ... OK] 12 ���ؼ���������');const calls=[...h.matchAll(/onclick=\"([a-zA-Z_]+)\( ...
++                                                               ~~~
+����ʽ������а�������ı�ǡ�-zA����
+����λ�� ��:4 �ַ�: 466
++ ... 2 ���ؼ���������');const calls=[...h.matchAll(/onclick=\"([a-zA-Z_]+)\(/g)]. ...
++                                                             ~~~~~
+����ʽ������а�������ı�ǡ�-Z_]+����
+����λ�� ��:4 �ַ�: 466
++ ... OK] 12 ���ؼ���������');const calls=[...h.matchAll(/onclick=\"([a-zA-Z_]+)\( ...
++                                                                  ~
+����ʽ��ȱ���ҡ�)����
+����λ�� ��:4 �ַ�: 471
++ ...  ���ؼ���������');const calls=[...h.matchAll(/onclick=\"([a-zA-Z_]+)\(/g)].m ...
++                                                                 ~
+����ʽ������а�������ı�ǡ�)����
+����λ�� ��:4 �ַ�: 556
++ ... st und=[...new Set(calls)].filter(c=>!new RegExp('function '+c+'\\\\s ...
++                                                                  ~
+�����ڡ�+������������ṩһ��ֵ����ʽ��
+����λ�� ��:4 �ַ�: 556
++ ... Set(calls)].filter(c=>!new RegExp('function '+c+'\\\\s*\\\\(').test(s ...
++                                                   ~~~~~~~~~~~~~~~
+����ʽ������а�������ı�ǡ�c+'\\\\s*\\\\('����
+����λ�� ��:4 �ַ�: 556
++ ... st und=[...new Set(calls)].filter(c=>!new RegExp('function '+c+'\\\\s ...
++                                                                  ~
+����ʽ��ȱ���ҡ�)����
+����λ�� ��:4 �ַ�: 578
++ ... ls)].filter(c=>!new RegExp('function '+c+'\\\\s*\\\\(').test(s)&&!new ...
++                                                                  ~
+����������ȱ�١�)����
+����λ�� ��:4 �ַ�: 579
++ ... )].filter(c=>!new RegExp('function '+c+'\\\\s*\\\\(').test(s)&&!new R ...
++                                                                 ~
+����ʽ������а�������ı�ǡ�)����
+��δ�������з����������������Ĵ������ԡ�
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : EndSquareBracketExpectedAtEndOfAttribute
+ 
+[exit code: 1]
+
+[assistant]
+PowerShell quoting mangled the inline JS. Write a file instead: `tests/check_wiring.js`.
+
+It should: parse html, extract script, list onclick targets, verify each is defined (function or var), and verify key functions exist. Also run the compute check (reuse check_v2 by importing? simpler: duplicate minimal compute check or just require the other file? Keep separate: wiring only).
+
+Let me write tests/check_wiring.js.
+
+[assistant • write]
+{"content":"// 检查 prototype_v2.html 的接线：每个 onclick 都能解析到已定义函数/方法\nconst fs = require('fs');\nconst path = require('path');\n\nconst html = fs.readFileSync(path.join(__dirname, '..', 'prototype_v2.html'), 'utf8');\nconst script = html.match(/<script>([\\s\\S]*?)<\\/script>/)[1];\n\n// 1) 语法\ntry { new Function(script); console.log('[OK] 语法解析通过'); }\ncatch (e) { console.error('[FAIL] 语法错误: ' + e.message); process.exit(1); }\n\n// 2) 关键函数\nconst need = ['startGen', 'nextFromApi', 'testConn', 'useDemo', 'togglePwd', 'apiSig',\n  'syncGen', 'fillResult', 'buildReview', 'runGen', 'regen', 'doneClean', 'toggleFmt', 'pick'];\nconst miss = need.filter((n) => !new RegExp('function\\\\s+' + n + '\\\\s*\\\\(').test(script));\nif (miss.length) { console.error('[FAIL] 缺函数: ' + miss.join(', ')); process.exit(1); }\nconsole.log('[OK] 关键函数齐全 (' + need.length + ')');\n\n// 3) onclick 目标\nconst calls = [...html.matchAll(/onclick=\"([a-zA-Z_$][\\w$]*)\\(/g)].map((m) => m[1]);\nconst defined = new Set(need);\nfor (const m of script.matchAll(/function\\s+([a-zA-Z_$][\\w$]*)\\s*\\(/g)) defined.add(m[1]);\nfor (const m of script.matchAll(/var\\s+([a-zA-Z_$][\\w$]*)\\s*=\\s*function/g)) defined.add(m[1]);\nconst undef = [...new Set(calls)].filter((c) => !defined.has(c));\nif (undef.length) { console.error('[FAIL] onclick 调用了未定义函数: ' + undef.join(', ')); process.exit(1); }\nconsole.log('[OK] onclick 目标全部可解析 (' + [...new Set(calls)].length + ' 个): ' +\n  [...new Set(calls)].sort().join(', '));\n\n// 4) 关键闸门行为：没填 key 时不再有 disabled 死锁\nconst apiNext = /id=\"api-next\"[^>]*>/.exec(html);\nconst dead = apiNext && /disabled/.test(apiNext[0]);\nconsole.log((dead ? '[FAIL] \"下一步\"仍是 disabled 死锁' : '[OK] \"下一步\"始终可点（未填 key 时给提示，不卡死）'));\nprocess.exit(dead ? 1 : 0);\n","file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\tests\\check_wiring.js"}
+
+[tool • write]
+<path>C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\tests\check_wiring.js</path>
+<type>file</type>
+<content>
+Created file
+</content>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>实验报告工厂 · 原型</title>
+<style>
+  :root{
+    --ink:#1b1f24; --ink2:#5a6472; --line:#e3e7ec; --bg:#f6f7f9; --card:#ffffff;
+    --brand:#2f6feb; --brand2:#eaf1ff; --ok:#1f9d63; --warn:#c47a12; --bad:#c0392b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font:14px/1.6 "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink); background:var(--bg);
+  }
+  header{
+    display:flex; align-items:center; gap:16px; padding:14px 22px;
+    background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5;
+  }
+  header h1{font-size:16px; margin:0; letter-spacing:.02em}
+  header .sub{color:var(--ink2); font-size:12px}
+  .steps{display:flex; gap:6px; margin-left:auto}
+  .steps button{
+    font:inherit; font-size:12.5px; padding:6px 13px; border-radius:999px; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:var(--ink2);
+  }
+  .steps button.on{background:var(--brand); border-color:var(--brand); color:#fff}
+  .wrap{display:grid; grid-template-columns:minmax(0,1fr); gap:18px; padding:18px 22px 60px; max-width:1180px; margin:0 auto}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px}
+  .panel h2{font-size:15px; margin:0 0 4px}
+  .panel .hint{color:var(--ink2); font-size:12.5px; margin:0 0 14px}
+  .hidden{display:none !important}
+  .drop{
+    border:1.5px dashed #cfd6e0; border-radius:12px; padding:22px; text-align:center; color:var(--ink2);
+    background:linear-gradient(#fff,#fbfcfe); font-size:13px;
+  }
+  .drop b{color:var(--brand)}
+  .thumbs{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+  .thumb{
+    width:112px; border:1px solid var(--line); border-radius:10px; padding:8px; background:#fff; font-size:11.5px; color:var(--ink2);
+  }
+  .thumb .ph{height:58px; border-radius:6px; background:repeating-linear-gradient(45deg,#eef1f5,#eef1f5 6px,#f7f9fb 6px,#f7f9fb 12px); margin-bottom:6px}
+  table{border-collapse:collapse; font-size:12.5px}
+  th,td{border:1px solid #dfe4ea; padding:4px 7px; text-align:center; white-space:nowrap}
+  th{background:#f3f5f8; font-weight:600; color:#333b46}
+  td input{
+    width:52px; border:0; background:transparent; text-align:center; font:inherit; font-size:12.5px;
+    padding:2px 0; border-radius:4px;
+  }
+  td input:focus{outline:2px solid var(--brand2); background:#fff}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media (max-width:900px){ .grid2{grid-template-columns:1fr} }
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:4px 0 16px}
+  .kpi{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#fcfdff}
+  .kpi .k{font-size:11.5px; color:var(--ink2)}
+  .kpi .v{font-size:17px; font-weight:600; letter-spacing:.01em}
+  .kpi .u{font-size:11.5px; color:var(--ink2)}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+  canvas{width:100%; height:auto; display:block}
+  .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px}
+  .btn{
+    font:inherit; font-size:13px; padding:9px 16px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+  .btn:active{transform:translateY(1px)}
+  ol.check{margin:0; padding-left:18px; font-size:13px; color:#39424e}
+  ol.check li{margin:5px 0}
+  ol.check .tag{font-size:11px; padding:1px 7px; border-radius:999px; background:var(--brand2); color:#1c4fbf; margin-left:6px}
+  .note{font-size:12px; color:var(--ink2); margin-top:10px}
+  code{background:#f1f4f8; padding:1px 5px; border-radius:4px; font-size:12px}
+
+  /* ---------- 打印：只出 A4 报告 ---------- */
+  #sheet{ display:none }
+  @media print{
+    @page{ size:A4; margin:25.4mm 31.7mm }
+    body{background:#fff}
+    header,.panel,.no-print{display:none !important}
+    #sheet{display:block; font:12pt/1.55 "宋体",SimSun,serif; color:#494949}
+    #sheet h1{font:700 22pt/1.4 "华文行楷",STXingkai,serif; color:#000080; text-align:center; margin:0 0 4pt}
+    #sheet .meta{font-size:10.5pt; text-align:center; margin-bottom:14pt}
+    #sheet h3{font:700 12pt/1.6 "宋体",SimSun,serif; color:#494949; margin:12pt 0 4pt}
+    #sheet table{font-size:10.5pt; margin:4pt auto; page-break-inside:avoid}
+    #sheet th,#sheet td{border:1px solid #999; padding:2pt 4pt}
+    #sheet .cap{text-align:center; font-size:10.5pt; margin:2pt 0 10pt}
+    #sheet .fig{display:block; margin:6pt auto 2pt; max-width:100%}
+    #sheet p{margin:3pt 0; text-indent:2em}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>实验报告工厂</h1>
+  <span class="sub">原型 v0.1 · 钨的逸出功测定（数据可改，实时重算）</span>
+  <nav class="steps" id="nav">
+    <button data-t="1">① 素材</button>
+    <button data-t="2" class="on">② 数据</button>
+    <button data-t="3">③ 核对与图</button>
+    <button data-t="4">④ 导出</button>
+  </nav>
+</header>
+
+<div class="wrap">
+  <!-- ① 素材 -->
+  <section class="panel hidden" id="p1">
+    <div id="fmtBox" style="border:1px solid #dbe3ef;background:#f7faff;border-radius:12px;padding:14px 16px;margin-bottom:18px">
+      <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:10px">⓪ 先选：这次要交哪个版本？<span style="font-weight:400;color:#5a6472;font-size:12.5px">（可多选，选完自动记住）</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap" id="fmtCards"></div>
+      <div id="fmtNote" style="margin-top:10px;font-size:12.5px;color:#5a6472;line-height:1.5"></div>
+    </div>
+    <h2>① 放进素材，让机器先读懂</h2>
+    <p class="hint">拖入讲稿截图与手写数据页；OCR 只是建议值，任何一格都可以在下一步手改——这是本产品最重要的设计取舍。</p>
+    <div class="drop">把 <b>讲稿截图（1–6.png）</b> 和 <b>原始数据照片</b> 拖到这里<br><span style="font-size:12px">当前原型已内置「钨的逸出功测定」的一套素材，可直接下一步</span></div>
+    <div class="thumbs">
+      <div class="thumb"><div class="ph"></div>讲义 1–6.png<br>线路图 / 公式</div>
+      <div class="thumb"><div class="ph"></div>IMG_222018.HEIC<br>手写数据页</div>
+      <div class="thumb"><div class="ph"></div>chaoxing 截图<br>100 分</div>
+    </div>
+    <p class="note">识别结果示例：表 1 共 8 行 × 8 列，64 个数据点；表 2 第 8 行（T = 2.16）在表格框线外，已提示“疑似漏标行”。</p>
+  </section>
+
+  <!-- ② 数据 -->
+  <section class="panel" id="p2">
+    <h2>② 录数据：一次录入，三张表自动长出来</h2>
+    <p class="hint"><code>U<sub>a</sub></code> 与 <code>I<sub>f</sub></code> 是表头，改格子里的 <code>I<sub>a</sub></code> 会立刻重算 lg I<sub>a</sub>、外推截距、斜率与逸出功。</p>
+    <div style="overflow:auto"><table id="t1"></table></div>
+    <div class="grid2" style="margin-top:18px">
+      <div>
+        <h3 style="font-size:13px;margin:0 0 8px">表 2 · lg I<sub>a</sub> – √U<sub>a</sub>（自动）</h3>
+        <div style="overflow:auto"><table id="t2"></table></div>
+      </div>
+      <div>
+        <h3 style="font-size:13px;margin:0 0 8px">表 3 · 外推结果（自动）</h3>
+        <div style="overflow:auto"><table id="t3"></table></div>
+      </div>
+    </div>
+    <p class="note" id="dataNote"></p>
+  </section>
+
+  <!-- ③ 核对与图 -->
+  <section class="panel hidden" id="p3">
+    <h2>③ 核对数值，图跟着长</h2>
+    <p class="hint">两次数线性化（√U<sub>a</sub> 线性化肖脱基效应、1/T 线性化里查孙方程）在这里各出一张图，与结果卡上的数字同源。</p>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div>
+        <canvas id="c1" width="760" height="520"></canvas>
+        <p class="cap" style="text-align:center;font-size:12px;color:#5a6472;margin:2px 0 0">图 4　lg I<sub>a</sub>–√U<sub>a</sub> 拟合直线族（外延到 √U<sub>a</sub>=0 求 lg I<sub>s</sub>）</p>
+      </div>
+      <div>
+        <canvas id="c2" width="760" height="520"></canvas>
+        <p class="cap" style="text-align:center;font-size:12px;color:#5a6472;margin:2px 0 0">图 5　lg(I<sub>s</sub>/T²)–1/T 直线（斜率求逸出功）</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 导出 -->
+  <section class="panel hidden" id="p4">
+    <h2>④ 一键出报告</h2>
+    <p class="hint">报告结构沿用学校模板的 9 个评分节，红字说明、页眉页脚、字体颜色全部按模板写死，学生只需要改数据与体会。</p>
+    <ol class="check">
+      <li>实验目的<span class="tag">10%</span></li>
+      <li>实验仪器<span class="tag">10%</span></li>
+      <li>实验原理<span class="tag">10%</span></li>
+      <li>实验内容与步骤<span class="tag">10%</span></li>
+      <li>原始数据记录照片<span class="tag">10%</span></li>
+      <li>数据处理及结果<span class="tag">20%</span></li>
+      <li>分析及体会<span class="tag">20%</span><span class="tag">≥300 字</span></li>
+      <li>思考题<span class="tag">附</span></li>
+      <li>超星练习得分截图<span class="tag">5%</span></li>
+    </ol>
+    <div class="btns" id="outBtns"></div>
+    <p class="note" id="outNote"></p>
+  </section>
+</div>
+
+<!-- ------- 打印用报告（由同一份数据生成） ------- -->
+<div id="sheet"></div>
+
+<script>
+/* ================= 数据 ================= */
+const UA = [25,36,49,64,81,100,121,144];
+const IF = [0.600,0.625,0.650,0.675,0.700,0.725,0.750,0.775];
+const IA = [
+  [23,23,24,24,25,26,26,28],
+  [43,44,44,45,46,48,48,50],
+  [78,80,81,83,84,86,87,88],
+  [139,140,142,143,152,152,153,157],
+  [237,242,244,249,255,260,262,268],
+  [393,405,410,420,425,434,447,431],
+  [645,664,666,682,694,707,725,728],
+  [1030,1050,1071,1081,1112,1129,1144,1162],
+];
+const K_B = 1.380649e-23, E_C = 1.602176634e-19, LN10 = 2.303, PHI_ACCEPT = 4.54;
+
+/* ================= 数学 ================= */
+const lg = x => Math.log10(x);
+const T = i => 920 + 1600 * IF[i];
+
+function lsq(xs, ys){                       // 最小二乘 + 相关 + 斜率标准偏差
+  const n = xs.length;
+  const mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+  let sxx=0, sxy=0, syy=0;
+  for (let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy; syy+=dy*dy; }
+  const k = sxy/sxx, b = my - k*mx;
+  let sse = 0;
+  for (let i=0;i<n;i++){ const r = ys[i]-(k*xs[i]+b); sse += r*r; }
+  const se = Math.sqrt(sse/(n-2))/Math.sqrt(sxx);
+  const r = syy>0 ? sxy/Math.sqrt(sxx*syy) : 0;
+  return {k, b, r, r2:r*r, se};
+}
+
+function compute(){
+  // 与手工流程一致：表里写几位就算几位（表 2 保留 2 位小数、表 3 的 1/T 与 lg(I_s/T²) 各 2 位）
+  const rows = IF.map((ifv,i) => {
+    const t = T(i);
+    const xs = UA.map(u => Math.sqrt(u));
+    const ys = IA[i].map(v => +lg(v).toFixed(2));
+    const f = lsq(xs, ys);
+    return {ifv, t, xs, ys, k:f.k, b:f.b, r:f.r, lgIs:f.b};
+  });
+  const X = rows.map(r => +(1000/r.t).toFixed(2));            // 1/T，单位 10⁻³K⁻¹
+  const Y = rows.map(r => +(r.lgIs - 2*lg(r.t/1000)).toFixed(2)); // lg I_s − 2lg(T/10³)
+  const main = lsq(X, Y);
+  const mTrue = main.k * 1000;
+  const phiJ = LN10 * K_B * Math.abs(mTrue);
+  const phieV = phiJ / E_C;
+  const uPhi = LN10 * K_B * main.se * 1000 / E_C;
+  return {rows, X, Y, main, mTrue, phiJ, phieV, uPhi, relErr:(phieV-PHI_ACCEPT)/PHI_ACCEPT*100};
+}
+
+/* ================= 渲染 ================= */
+const fmt = (v,d=3) => v.toFixed(d).replace('-','−');
+const $ = s => document.querySelector(s);
+
+function renderTables(D){
+  // 表 1（可编辑）
+  let h = '<tr><th rowspan="2" style="min-width:56px">I<sub>f</sub> / A</th>' +
+          '<th colspan="8" style="text-align:center">U<sub>a</sub> / V</th></tr><tr>' +
+          UA.map(u=>'<th>'+u+'</th>').join('') + '</tr>';
+  IF.forEach((ifv,i)=>{
+    h += '<tr><th>'+ifv.toFixed(3)+'</th>';
+    IA[i].forEach((v,j)=>{
+      h += '<td><input data-i="'+i+'" data-j="'+j+'" value="'+v+'" inputmode="numeric"></td>';
+    });
+    h += '</tr>';
+  });
+  $('#t1').innerHTML = h;
+
+  // 表 2（lg I_a）
+  let h2 = '<tr><th rowspan="2">T / 10³K</th><th colspan="8" style="text-align:center">√U<sub>a</sub></th></tr><tr>' +
+           UA.map(u=>'<th>'+Math.sqrt(u).toFixed(1)+'</th>').join('') + '</tr>';
+  D.rows.forEach(r=>{
+    h2 += '<tr><th>'+r.t.toFixed(3).slice(0,4)+'</th>' + r.ys.map(v=>'<td>'+v.toFixed(2)+'</td>').join('') + '</tr>';
+  });
+  $('#t2').innerHTML = h2;
+
+  // 表 3
+  let h3 = '<tr><th>T / 10³K</th>' + D.rows.map(r=>'<th>'+(r.t/1000).toFixed(2)+'</th>').join('') + '</tr>';
+  h3 += '<tr><th>1/T (10⁻³K⁻¹)</th>' + D.X.map(v=>'<td>'+v.toFixed(2)+'</td>').join('') + '</tr>';
+  h3 += '<tr><th>lg I<sub>s</sub></th>' + D.rows.map(r=>'<td>'+r.lgIs.toFixed(3)+'</td>').join('') + '</tr>';
+  h3 += '<tr><th>lg(I<sub>s</sub>/T²)</th>' + D.Y.map(v=>'<td>'+v.toFixed(2)+'</td>').join('') + '</tr>';
+  $('#t3').innerHTML = h3;
+}
+
+function renderKPI(D){
+  const e = D.relErr;
+  $('#kpis').innerHTML = [
+    ['斜率 m（10⁻³K⁻¹）', fmt(D.main.k,3), ''],
+    ['相关系数 r', fmt(D.main.r,4), 'R²=' + D.main.r2.toFixed(4)],
+    ['逸出功 eφ', fmt(D.phieV,2)+' eV', fmt(D.phiJ*1e19,2)+'×10⁻¹⁹ J'],
+    ['相对误差', (e>0?'+':'')+fmt(e,2)+'%', '公认 4.54 eV'],
+  ].map(([k,v,u])=>'<div class="kpi"><div class="k">'+k+'</div><div class="v'+(k==='相对误差'?' ok':'')+'">'+v+
+      '</div><div class="u">'+u+'</div></div>').join('');
+  $('#dataNote').innerHTML = '截距 lg I<sub>s</sub> = ' + D.rows.map(r=>r.lgIs.toFixed(2)).join(' / ') +
+      '；m = ' + fmt(D.main.k,3) + '、b = ' + fmt(D.main.b,3) + '；u(eφ) = ' + D.uPhi.toFixed(3) + ' eV。';
+}
+
+/* ---------- 画图（不依赖任何图表库，方便复刻论文式样） ---------- */
+function axes(ctx,W,H,pad,xr,yr,xt,yt,xlab,ylab,title){
+  ctx.clearRect(0,0,W,H);
+  ctx.font='16px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#1b1f24'; ctx.textAlign='center';
+  ctx.fillText(title,W/2,30);
+  const X = v => pad.l + (v-xr[0])/(xr[1]-xr[0])*(W-pad.l-pad.r);
+  const Y = v => H-pad.b - (v-yr[0])/(yr[1]-yr[0])*(H-pad.t-pad.b);
+  // 网格
+  ctx.strokeStyle='#eef1f5'; ctx.lineWidth=1;
+  for(let v=Math.ceil(xr[0]/xt)*xt; v<=xr[1]; v+=xt){ ctx.beginPath(); ctx.moveTo(X(v),Y(yr[0])); ctx.lineTo(X(v),Y(yr[1])); ctx.stroke(); }
+  for(let v=Math.ceil(yr[0]/yt)*yt; v<=yr[1]; v+=yt){ ctx.beginPath(); ctx.moveTo(X(xr[0]),Y(v)); ctx.lineTo(X(xr[1]),Y(v)); ctx.stroke(); }
+  // 坐标轴
+  ctx.strokeStyle='#1b1f24'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(X(xr[0]),Y(yr[0])); ctx.lineTo(X(xr[1]),Y(yr[0]));
+  ctx.moveTo(X(xr[0]),Y(yr[0])); ctx.lineTo(X(xr[0]),Y(yr[1])); ctx.stroke();
+  // 刻度
+  ctx.font='12px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#5a6472';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let v=Math.ceil(xr[0]/xt)*xt; v<=xr[1]+1e-9; v+=xt){
+    ctx.fillText(Math.abs(v)<1e-9?'0':(xt<1?v.toFixed(2):v), X(v), Y(yr[0])+6);
+  }
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let v=Math.ceil(yr[0]/yt)*yt; v<=yr[1]+1e-9; v+=yt){
+    ctx.fillText(yt<1?v.toFixed(1):v.toFixed(1), X(xr[0])-8, Y(v));
+  }
+  // 轴标题
+  ctx.font='14px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#1b1f24';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText(xlab, W/2, H-26);
+  ctx.save(); ctx.translate(20,H/2); ctx.rotate(-Math.PI/2); ctx.fillText(ylab,0,0); ctx.restore();
+  return {X,Y};
+}
+
+function drawFamily(cv, D){
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const {X,Y} = axes(ctx,W,H,{l:64,r:22,t:52,b:46},[0,12.5],[1.2,3.2],2,0.2,'√U_a','lg I_a','各温度下 lg I_a – √U_a 直线族');
+  const colors=['#555','#d95c5c','#3b7dd8','#2f9e6f','#c88a2e','#8a5cd0','#22a6b3','#777'];
+  D.rows.forEach((r,i)=>{
+    // 拟合直线：外延到 x=0
+    ctx.strokeStyle=colors[i]; ctx.lineWidth=1.3; ctx.beginPath();
+    ctx.moveTo(X(0),Y(r.k*0+r.b)); ctx.lineTo(X(12),Y(r.k*12+r.b)); ctx.stroke();
+    // 数据点
+    ctx.fillStyle=colors[i];
+    r.xs.forEach((x,j)=>{ ctx.beginPath(); ctx.arc(X(x),Y(r.ys[j]),3.2,0,7); ctx.fill(); });
+    // 截距标记
+    ctx.fillStyle=colors[i]; ctx.beginPath();
+    ctx.moveTo(X(0),Y(r.b)-5); ctx.lineTo(X(0)+5,Y(r.b)); ctx.lineTo(X(0),Y(r.b)+5); ctx.lineTo(X(0)-5,Y(r.b)); ctx.fill();
+    // 右侧温度标签
+    ctx.font='12px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#5a6472'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText((r.t/1000).toFixed(2), X(12.1), Y(r.b + r.k*12));
+  });
+}
+
+function drawMain(cv, D){
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const {X,Y} = axes(ctx,W,H,{l:74,r:22,t:52,b:46},[0.45,0.54],[0.6,3.0],0.01,0.2,'1/T (10⁻³ K⁻¹)','lg( I_s / T² )','lg( I_s / T² ) – 1/T 直线');
+  ctx.strokeStyle='#2f6feb'; ctx.lineWidth=1.6; ctx.beginPath();
+  ctx.moveTo(X(0.45),Y(D.main.k*0.45+D.main.b)); ctx.lineTo(X(0.54),Y(D.main.k*0.54+D.main.b)); ctx.stroke();
+  D.rows.forEach((r,i)=>{
+    ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.arc(X(D.X[i]),Y(D.Y[i]),4,0,7); ctx.fill();
+    ctx.font='11.5px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#5a6472'; ctx.textAlign='left';
+    ctx.fillText((r.t/1000).toFixed(2), X(D.X[i])+7, Y(D.Y[i])-5);
+  });
+  // 参数框
+  const txt = ['m = ' + fmt(D.main.k,3), 'b = ' + fmt(D.main.b,3), 'r = ' + fmt(D.main.r,4),
+               'eφ = ' + fmt(D.phieV,2) + ' eV', 'E = ' + fmt(D.relErr,2) + ' %'];
+  ctx.fillStyle='rgba(255,255,255,.94)'; ctx.strokeStyle='#c9d1dc'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.rect(W-232, 62, 212, 118); ctx.fill(); ctx.stroke();
+  ctx.font='12.5px "Microsoft YaHei",sans-serif'; ctx.fillStyle='#1b1f24'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  txt.forEach((s,i)=>ctx.fillText(s, W-220, 84+i*23));
+}
+
+/* ================= 打印报告 ================= */
+function renderSheet(D){
+  const cap = (s)=>'<p class="cap">'+s+'</p>';
+  let shot1 = '', shot2 = '';
+  try { shot1 = $('#c1').toDataURL('image/png'); shot2 = $('#c2').toDataURL('image/png'); } catch(e){}  // 打印时带上真图
+  const t1 = '<table><tr><th rowspan="2">I_f / A</th><th colspan="8">U_a / V</th></tr><tr>' +
+    UA.map(u=>'<th>'+u+'</th>').join('')+'</tr>' +
+    IF.map((v,i)=>'<tr><th>'+v.toFixed(3)+'</th>'+IA[i].map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('') + '</table>';
+  const t3 = '<table><tr><th>T / 10³K</th>'+D.rows.map(r=>'<th>'+(r.t/1000).toFixed(2)+'</th>').join('')+'</tr>' +
+    '<tr><th>1/T (10⁻³K⁻¹)</th>'+D.X.map(v=>'<td>'+v.toFixed(2)+'</td>').join('')+'</tr>' +
+    '<tr><th>lg I_s</th>'+D.rows.map(r=>'<td>'+r.lgIs.toFixed(3)+'</td>').join('')+'</tr>' +
+    '<tr><th>lg(I_s/T²)</th>'+D.Y.map(v=>'<td>'+v.toFixed(2)+'</td>').join('')+'</tr></table>';
+  const fig = (src,capText)=> src ? '<img class="fig" src="'+src+'" style="width:86%">'+cap(capText) : cap(capText);
+
+  $('#sheet').innerHTML =
+    '<h1>钨的逸出功测定</h1>' +
+    '<div class="meta">自动化　院　机器人工程　专业　2025　年级　一　班　　学号 202583240016　姓名 李得源　指导教师 周凯</div>' +
+    '<h3>【数据处理及结果】</h3>' +
+    '<p>表 1　不同灯丝电流 I_f 和阳极电压 U_a 对应的阳极电流 I_a 值</p>' + t1 +
+    '<p>表 2　不同温度 T 和 √U_a 下对应的阳极电流的对数值 lg I_a（见页面交互表）</p>' +
+    fig(shot1, '图 4　lg I_a–√U_a 拟合直线族（外延到 √U_a = 0 求 lg I_s）') +
+    '<p>表 3　lg(I_s/T²)～1/T 数据表</p>' + t3 +
+    fig(shot2, '图 5　lg(I_s/T²)–1/T 直线（斜率求逸出功）') +
+    '<p>拟合得斜率 m = ' + fmt(D.main.k,3) + '，截距 b = ' + fmt(D.main.b,3) +
+      '，r = ' + fmt(D.main.r,4) + '。由 eφ = 2.303k|m| 得 eφ = ' + fmt(D.phieV,2) +
+      ' eV，与公认值 4.54 eV 相比相对误差 ' + fmt(D.relErr,2) + '%。</p>';
+}
+
+/* ================= 交互 ================= */
+function refresh(){
+  const D = compute();
+  renderTables(D); renderKPI(D);
+  drawFamily($('#c1'), D); drawMain($('#c2'), D);
+  renderSheet(D);
+  window.__D = D;
+}
+
+document.addEventListener('input', e=>{
+  const el = e.target;
+  if (el.matches('#t1 input')){
+    const i = +el.dataset.i, j = +el.dataset.j;
+    const v = parseFloat(String(el.value).replace(/[^0-9.\-]/g,''));
+    IA[i][j] = isFinite(v) && v > 0 ? v : IA[i][j];
+    refresh();
+  }
+});
+
+$('#nav').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on', x===b));
+  ['p1','p2','p3','p4'].forEach((id,k)=>$('#'+id).classList.toggle('hidden', String(k+1)!==b.dataset.t));
+});
+
+function exportJSON(){
+  const D = window.__D;
+  const payload = {
+    experiment: 'tungsten-work-function',
+    tables: {Ua: UA, If: IF, Ia: IA},
+    derived: {
+      T: D.rows.map(r=>r.t), invT: D.X, lgIs: D.rows.map(r=>r.lgIs), lgIsT2: D.Y,
+      fit: {m: D.main.k, b: D.main.b, r: D.main.r},
+      result: {phi_eV: D.phieV, relErr: D.relErr, u_eV: D.uPhi},
+    },
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)], {type:'application/json'}));
+  a.download = 'tungsten-work-function.json'; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ================= ⓪ 输出格式：最先选，决定导出按钮 ================= */
+const FMT = [
+  {id:'pdf',  name:'PDF 提交版',   desc:'交作业用的就是它：版式固定、不可改、文字可检索', tag:'推荐'},
+  {id:'docx', name:'Word 可编辑版', desc:'要自己改体会、答辩前再改内容时用', tag:''},
+  {id:'json', name:'数据 JSON',     desc:'留档、复现，下次微调不用重录数据', tag:''},
+  {id:'png',  name:'图表 PNG',      desc:'贴 PPT 或答辩用，单张导出', tag:''},
+];
+let OUT = null;
+try { OUT = JSON.parse(localStorage.getItem('fmt') || 'null'); } catch(e){ OUT = null; }
+if (!OUT || typeof OUT !== 'object') OUT = {pdf:true, docx:true, json:false, png:false};
+
+function renderOut(){
+  const box = $('#outBtns'); if (!box) return;
+  const B = [];
+  if (OUT.pdf)  B.push('<button class="btn primary" onclick="window.print()">打印 / 导出 PDF</button>');
+  if (OUT.docx) B.push('<button class="btn" onclick="alert(\'M2：用 docx.js 在浏览器里直出 宋体 12pt / #494949 的 .docx\')">导出 .docx（M2）</button>');
+  if (OUT.json) B.push('<button class="btn" onclick="exportJSON()">导出数据 JSON</button>');
+  if (OUT.png)  B.push('<button class="btn" onclick="alert(\'M2：两张图各存一份 PNG\')">导出图表 PNG（M2）</button>');
+  box.innerHTML = B.join('') || '<span style="color:#c00">请回到第 ① 步选择输出格式</span>';
+  const tip = ['PDF 由浏览器打印生成，A4 边距 上/下 25.4mm、左/右 31.7mm 已按模板设好。'];
+  if (OUT.pdf) tip.push('打印时把对话框里的「页眉和页脚」勾掉——页眉页脚由报告样式自己控制。');
+  if (OUT.docx && !OUT.pdf) tip.push('只出 Word 版的话，交作业前记得自己另存一份 PDF。');
+  if (!OUT.docx) tip.push('没选 Word 版：以后想改内容只能整份重新生成。');
+  $('#outNote').textContent = tip.join(' ');
+}
+
+function renderFmt(){
+  $('#fmtCards').innerHTML = FMT.map(f=>{
+    const on = !!OUT[f.id];
+    return '<label style="flex:1 1 200px;min-width:190px;cursor:pointer;border:2px solid ' + (on?'#1d4ed8':'#d5dbe3') +
+      ';background:' + (on?'#eef3ff':'#fff') + ';border-radius:10px;padding:10px 12px;display:block">' +
+      '<input type="checkbox" data-f="' + f.id + '"' + (on?' checked':'') + ' style="margin-right:6px">' +
+      '<b style="font-size:13px">' + f.name + '</b>' +
+      (f.tag ? '<span style="font-size:11px;color:#1d4ed8;margin-left:6px">' + f.tag + '</span>' : '') +
+      '<div style="font-size:12px;color:#5a6472;margin-top:4px;line-height:1.45">' + f.desc + '</div></label>';
+  }).join('');
+  const picked = FMT.filter(f=>OUT[f.id]).map(f=>f.name);
+  $('#fmtNote').textContent = picked.length
+    ? '本次将产出：' + picked.join(' + ') + '　·　内容只生成一次，格式只是渲染，勾几个都不涨价。'
+    : '还没选：至少要 PDF 或 Word 之一，否则没法交作业。';
+  renderOut();
+}
+
+document.addEventListener('change', e=>{
+  const el = e.target;
+  if (el.matches('#fmtCards input[data-f]')){
+    OUT[el.dataset.f] = el.checked;
+    try { localStorage.setItem('fmt', JSON.stringify(OUT)); } catch(err){}
+    renderFmt();
+  }
+});
+renderFmt();
+
+refresh();
+</script>
+</body>
+</html>

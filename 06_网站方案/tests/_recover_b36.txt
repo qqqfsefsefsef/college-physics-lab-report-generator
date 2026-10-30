@@ -1,0 +1,313 @@
+[assistant]
+The screenshot shows: 识别到的实验 = 光电效应的研究, and the red error: "这个实验还没登记到识别桥里，先换一个或手动录入。" plus 还差：原始数据页.
+
+Cause: my EXPID map only has young and tungsten. The user selected 光电效应的研究 (there's a known 光电效应 experiment which IS on the bridge? No — bridge experiments = tungsten, young only). So:
+1. EXPID lacks 光电效应 → immediate error, no request.
+2. Even if mapped, bridge has no 'photo' experiment definition.
+
+So the fix: add 光电效应 to the bridge experiments (experiments/photo.json with table specs) and to EXPID. We DO have the photo experiment fully modeled (tables t1/t2/t3 with known shapes) — we can create `07_流水线/experiments/photo.json`.
+
+Also the fallback should be better: if experiment isn't registered, don't block — offer "手动录入" (manual entry) so the user isn't dead-ended. But minimal: register 光电效应.
+
+Also note: user is using the file:// or 8731 page? They got the error which came from my `identify()` guard — that means the page IS running and they clicked the data upload. Good.
+
+Wait: the error text appears without any bridge call — correct, since EXPID lookup failed.
+
+Plan:
+1. Create `07_流水线/experiments/photo.json` with id 'photo', name '光电效应的研究', no '实验 47', tables t1/t2/t3 shapes matching the real report (t1: 波长/光阑 × 8 电压点 ... complex), figures etc. Keep it descriptive enough for the vision prompt: t1 (22 列曲线数据), t2 (I_M—P), t3 (U0~ν 5 波长 × 3 次).
+2. Add mapping in page: '光电效应的研究': 'photo'.
+3. Also make the error path offer a one-click "用示例数据/手动录入" instead of a dead end — at least show that 生成 can be unlocked by demo mode. Minimum: change message to mention 用示例数据体验.
+4. Restart bridge? It's down (both ports down). The bridge will need restart to pick up the new experiment JSON. Since the user is testing right now, I should restart BOTH services so they can continue. They killed them before, but now they're actively using the page (screenshot), so the page is served somehow — maybe they opened the file directly (file://). The error message they see is page-side, so page works. The bridge must be down (or running? they ran 启动.ps1?). Let me check ports.
+
+Actually if they ran 启动.ps1, both would be up. The screenshot shows the page; if bridge were up, probeBridge would have shown "识别桥已连接..." in the rec-status area — instead the red text is my identify() guard message. But note: pick() overwrites rec-status. Before picking, probeBridge may have shown something. Can't tell.
+
+Let me check ports first, then decide.
+
+Also: the vision prompt for photo needs the table layout. Let me write photo.json with reasonable metadata:
+```json
+{
+  "id":"photo","no":"实验 47","name":"光电效应的研究",
+  "paradigm":"line_fit",
+  "tables":{
+    "t1":{"shape":"22 列 × 4 行的曲线数据（波长 435.8/546.1 nm 各自 U_AK 与 I）","row_header":"波长、光阑、U_AK/I","col_header":"测量数组 1~8 / 9~16 / 17~23","cells":"..."},
+    ...
+  }
+}
+```
+The vision model prompt uses table_brief() which reads shape/row_header/col_header. Fine.
+
+But careful: bridge's experiments() lists any json in experiments/. young.json exists; adding photo.json requires required keys (id, name, no, tables) — used by /health and prompt. core.calc_photo doesn't exist, but /calc only used optionally.
+
+Let me look at young.json briefly to match the schema? I know from context: id, no, calc, checks, renderer, content, objectives, formulas, tables, figures, errata, accepted_value. I'll write photo.json minimally with the same keys so it doesn't break pipeline (though pipeline won't be used now).
+
+Simpler and safer: write a small photo.json with id/name/no/paradigm/tables/notes only. bridge only needs id/name/no/tables. Good.
+
+Then patch page EXPID.
+
+Then also improve the guard message: "这个实验还没登记到识别桥里" → keep, but add: 可先「用示例数据体验」，或把讲稿/表格发我，我 5 分钟接进来. Actually the message should be actionable in-UI. I'll change to: '这个实验还没接入识别（目前支持：钨的逸出功、杨氏模量、光电效应）。换一个实验，或先点「没有密钥？用示例数据体验」。' After adding photo, supported list = those three.
+
+Then restart services so they can test: I'll start them via the 启动.ps1 script? That opens browser windows — fine/desirable? It also uses Start-Process (detached). Given the user is actively testing, restarting is helpful. But they killed my jobs twice... Using their script is different (detached windows they control). I'll run it and verify ports, then tell them to refresh.
+
+Hmm: running 启动.ps1 will open a browser tab. That's acceptable.
+
+Let me: check ports → write photo.json → patch page → start services → verify → reply.
+
+Actually, one risk: if I start detached python processes, they persist after session; the user seems to prefer controlling them. But the 启动.ps1 was designed for that. I'll start it with -Mock? No — real mode, since key comes from page.
+
+Wait: mock mode would return tungsten stub for any exp with stub data; photo has no stub → returns empty tables + note. Not great. Real mode is the point now.
+
+Let me proceed.
+
+[assistant • pwsh]
+{"command":"foreach ($p in 8731,8732) { $l=Get-NetTCPConnection -State Listen -LocalPort $p -ErrorAction SilentlyContinue; if ($l) { \"$p LISTENING\" } else { \"$p down\" } }\nGet-ChildItem 'C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\07_流水线\\experiments' | Select-Object Name,Length | Format-Table -AutoSize | Out-String","description":"Check ports and experiment definitions"}
+
+[tool • pwsh]
+8731 down
+8732 down
+
+Name          Length
+----          ------
+tungsten.json   2394
+young.json      2130
+
+
+
+
+
+[assistant]
+
+
+[assistant • read]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\07_流水线\\experiments\\young.json"}
+
+[tool • read]
+<path>C:\Users\lidey\Desktop\实验报告制作沙盒\07_流水线\experiments\young.json</path>
+<type>file</type>
+<content>
+1: {
+2:   "id": "young",
+3:   "no": "实验 24",
+4:   "name": "用静态拉伸法测金属丝的杨氏弹性模量",
+5:   "title": "用静态拉伸法测金属丝的杨氏弹性模量",
+6:   "calc": "young",
+7:   "checks": "young",
+8:   "renderer": "ir",
+9:   "content": "07_流水线/content/young.md",
+10:   "accepted_value_Pa": 200000000000,
+11:   "paradigm": "successive_difference",
+12:   "objectives": [
+13:     "学会测量杨氏弹性模量的一种方法；",
+14:     "掌握用光杠杆法测量微小伸长量的原理；",
+15:     "学会用逐差法处理实验数据。"
+16:   ],
+17:   "formulas": {
+18:     "F1": "σ = *F*/*S* = *Y*·Δ*L*/*L*",
+19:     "F2": "*Y* = *FL*/(*S*Δ*L*) = 4*FL*/(π*d*^{2}Δ*L*)",
+20:     "F3": "Δ*L* = *K*·*N*/(2*D*)",
+21:     "F4": "*Y* = 8*FLD*/(π*d*^{2}*KN*)",
+22:     "F5": "N̄ = (1/4)[(*n*₄ − *n*₀) + (*n*₅ − *n*₁) + (*n*₆ − *n*₂) + (*n*₇ − *n*₃)]",
+23:     "F6": "*Y* = 4*L*/(π*d*^{2}*M*)"
+24:   },
+25:   "tables": [
+26:     {
+27:       "id": "t1",
+28:       "caption": "表1 加减砝码时光杠杆镜内标尺像的读数变化值 N",
+29:       "unit_note": "荷载 kg；读数 10⁻²m",
+30:       "rows": "0~7 次（初始 2 kg，每次加 1 kg）",
+31:       "cols": "增重/减重/平均/每 4 kg 变化 N"
+32:     },
+33:     {
+34:       "id": "t2",
+35:       "caption": "表2 钢丝直径 d 数据表",
+36:       "unit_note": "d/mm，千分尺",
+37:       "rows": "6 次 + 平均值 + 零点修正",
+38:       "cols": "1~6"
+39:     },
+40:     {
+41:       "id": "t3",
+42:       "caption": "表3 各单次测量量",
+43:       "unit_note": "D、L、K / m",
+44:       "rows": "D、L、K、g",
+45:       "cols": "测量值 / 仪器误差 / 相对不确定度"
+46:     }
+47:   ],
+48:   "figures": [],
+49:   "errata": [
+50:     "讲义表 1 的 N 列只印了 N₁~N₃ 三行，逐差法实际应给出 N₁~N₄ 四组（n₄−n₀ … n₇−n₃）。",
+51:     "讲义第 1 页公式(9) 出现两次编号（F=YSΔL/L 与 Y=4L/(πd²M)），本报告按内容分别引用。",
+52:     "讲义未给钢丝杨氏模量的公认值，本报告按 2.0×10¹¹ Pa 比较（示例数据用）。"
+53:   ],
+54:   "questions": 7,
+55:   "prose_sections": ["原理1", "原理2", "原理3", "原理4", "仪器", "步骤", "数据说明", "体会", "思考题"]
+56: }
+
+(End of file - total 56 lines)
+</content>
+
+[assistant]
+Note: `tables` in young.json is a LIST of dicts with keys id/caption/unit_note/rows/cols — but bridge.table_brief() does `(ed.get('tables') or {}).items()` and `t.get('shape')`, `t.get('row_header')`, `t.get('col_header')`. With a list, `.items()` fails → exception in prompt building → 502. So the bridge's table_brief must handle both list and dict.
+
+Fix table_brief to accept list or dict:
+```python
+def table_brief(ed):
+    ts = ed.get('tables') or {}
+    items = ts.items() if isinstance(ts, dict) else [(t.get('id', 't%d' % i), t) for i, t in enumerate(ts, 1)]
+    lines = []
+    for key, t in items:
+        rows = t.get('rows') or t.get('row_header') or ''
+        cols = t.get('cols') or t.get('col_header') or ''
+        shape = t.get('shape') or ''
+        lines.append('- %s：%s%s%s' % (key, t.get('caption',''), ...))
+```
+Let me write it to produce a readable line: "- t1：表1 加减砝码时…；行＝0~7 次；列＝增重/减重/平均/每 4 kg 变化 N；单位＝…".
+
+Then add photo.json following young.json's list-style schema (so it's consistent for future pipeline rendering).
+
+Photo tables (from the delivered report):
+- t1: 表1 光电管的 U_AK~I_K 关系 — 22 列（测量数组 1~23），行＝波长 435.8/546.1 nm × 光阑（2mm/4mm），每行交替 U_AK 与 I；单位 U/V、I/10⁻¹¹A. Actually in the report 表1 是 18×10? From verify: 表1 18×10. Hmm. For the prompt, describe as: 行＝两个波长各一组；列＝U_AK 与 I 交替（10⁻¹¹ A）。
+- t2: I_M—P 关系：2 波长 × 3 光阑（2/4/8mm），I_M/10⁻¹¹ A.
+- t3: U0~ν：5 个波长（365/404.7/435.8/546.1/577 nm），3 次截止电压 + 平均。
+
+Let me write photo.json with those three + errata + formulas (F1..F5 from the photo report) + objectives + paradigm line_fit + accepted h=6.626e-34.
+
+Also patch page EXPID to include photo.
+
+Also improve the guard message.
+
+Then restart services (mock? no, real) — but without key the recognition will 400 with a clear message. The user wants to know why they can't. Better UX: if bridge is in real mode and no key anywhere, the message should say "先在首页填 API key". The bridge already returns that. But the user hit the page-side guard before any request.
+
+Let me also make the page-side guard smarter: if exp not in EXPID but bridge is up, still send request (bridge knows its experiments) — better: ask bridge /health for experiments list at probe time and store BRIDGE_EXPS; then identify() checks against that and shows a clear message listing supported ones. Let me implement: in probeBridge, store j.experiments → BRIDGE_EXPS (array of {id,name}); EXPID mapping by name can then be built dynamically from health! That removes hardcoding: if the experiment name matches one on the bridge, use its id.
+
+That's cleaner: `function eidForExp(name){ var hit=(BRIDGE_EXPS||[]).filter(function(e){return e.name===name;})[0]; return hit?hit.id:(EXPID[name]||null); }`.
+
+So adding an experiment later = drop a json in experiments/ → page picks it up from /health. 
+
+Let me implement all edits now.
+
+[assistant • write]
+{"content":"{\n  \"id\": \"photo\",\n  \"no\": \"实验 47\",\n  \"name\": \"光电效应的研究\",\n  \"title\": \"光电效应的研究\",\n  \"calc\": \"photo\",\n  \"checks\": \"photo\",\n  \"renderer\": \"ir\",\n  \"content\": \"07_流水线/content/photo.md\",\n  \"accepted_h\": 6.626e-34,\n  \"paradigm\": \"line_fit\",\n  \"objectives\": [\n    \"了解光的量子性和光电效应的规律，通过实验加深对光的量子性的理解；\",\n    \"测量光电管的伏安特性曲线，找出不同光频率下的截止电压；\",\n    \"验证爱因斯坦方程，并求出普朗克常量。\"\n  ],\n  \"formulas\": {\n    \"F1\": \"*h*ν = ½*mv*² + *A*ₛ\",\n    \"F2\": \"*eU*ₛ = ½*mv*²\",\n    \"F3\": \"*eU*ₛ = *h*ν − *A*ₛ\",\n    \"F4\": \"*U*ₛ = (*h*/*e*)ν − *A*ₛ/*e* = (*h*/*e*)(ν − ν₀)\",\n    \"F5\": \"*h* = *eK*\"\n  },\n  \"tables\": [\n    {\n      \"id\": \"t1\",\n      \"caption\": \"表1 光电管的 U_AK~I_K 关系\",\n      \"unit_note\": \"U_AK/V；I/(10⁻¹¹A)；光阑 2mm 与 4mm\",\n      \"rows\": \"两个波长 435.8 nm、546.1 nm 各一行 U_AK 与其对应的 I\",\n      \"cols\": \"测量数组 1~23（U_AK 取 −4、−3、−2、−1、0、1、2、3、4、6、8、10、12、14、16、18、20、22、24、26、28、30 V）\"\n    },\n    {\n      \"id\": \"t2\",\n      \"caption\": \"表2 I_M—P 关系（U_AK＝30 V）\",\n      \"unit_note\": \"I_M/(10⁻¹¹A)\",\n      \"rows\": \"两个波长 435.8 nm、546.1 nm\",\n      \"cols\": \"光阑 Φ＝2/4/8 mm 三档的饱和电流\"\n    },\n    {\n      \"id\": \"t3\",\n      \"caption\": \"表3 U₀~ν 关系测量（Φ＝2 mm）\",\n      \"unit_note\": \"λ/nm；ν/(10¹⁴Hz)；U₀/V\",\n      \"rows\": \"3 次读数 + 平均值\",\n      \"cols\": \"5 个波长 365.0、404.7、435.8、546.1、577.0 nm（频率 ν 已由讲义印好，不用手填）\"\n    }\n  ],\n  \"figures\": [],\n  \"errata\": [\n    \"讲义第 1 页把 h 的公认值印成 6.62916×10⁻³⁴ J·s，正确值 6.626×10⁻³⁴ J·s。\",\n    \"讲义步骤(4) 写 405.0 nm，与表 1／表 3 的 404.7 nm 不一致，按 404.7 nm 处理。\",\n    \"讲义第 6 页出现两个「表3」：I_M—P 关系那张实际应为表 2。\",\n    \"讲义表 1 标 ×10⁻¹⁰ A，原始记录按 ×10⁻¹¹ A 记录，统一用 10⁻¹¹ A。\"\n  ],\n  \"questions\": 3,\n  \"prose_sections\": [\"原理1\", \"原理2\", \"原理3\", \"原理4\", \"仪器\", \"步骤\", \"数据说明\", \"体会\", \"思考题\"]\n}\n","file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\07_流水线\\experiments\\photo.json"}
+
+[tool • write]
+<path>C:\Users\lidey\Desktop\实验报告制作沙盒\07_流水线\experiments\photo.json</path>
+<type>file</type>
+<content>
+Created file
+</content>
+
+[assistant]
+
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\07_流水线\\bridge.py","new_string":"def table_brief(ed):\n    \"\"\"把实验定义里的表规格压成一句人话，给模型当提示。\n    表定义可能是 list（[{id,caption,rows,cols,unit_note}]）也可能是 dict（{t1:{row_header,...}}）。\"\"\"\n    ts = ed.get('tables') or {}\n    if isinstance(ts, dict):\n        items = list(ts.items())\n    else:\n        items = [((t.get('id') or 't%d' % (i + 1)), t) for i, t in enumerate(ts)]\n    lines = []\n    for key, t in items:\n        rows = t.get('rows') or t.get('row_header') or t.get('shape') or ''\n        cols = t.get('cols') or t.get('col_header') or ''\n        unit = t.get('unit_note') or ''\n        cap = t.get('caption') or ''\n        seg = '%s（%s）' % (cap, key) if cap else key\n        if rows:\n            seg += ' 行：' + rows\n        if cols:\n            seg += '；列：' + cols\n        if unit:\n            seg += '；单位：' + unit\n        lines.append('- ' + seg)\n    return '\\n'.join(lines)","old_string":"def table_brief(ed):\n    \"\"\"把实验定义里的表规格压成一句人话，给模型当提示。\"\"\"\n    lines = []\n    for key, t in (ed.get('tables') or {}).items():\n        shape = t.get('shape') or ''\n        head = t.get('row_header') or ''\n        cols = t.get('col_header') or ''\n        lines.append('- %s：%s%s%s' % (key, shape, ('，行＝' + head) if head else '',\n                                       ('，列＝' + cols) if cols else ''))\n    return '\\n'.join(lines)"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\07_流水线\bridge.py has been updated successfully.
+
+[assistant]
+Now patch the page: probeBridge stores experiments; eidForExp uses it; guard message improved.
+
+Current probeBridge:
+```js
+function probeBridge() {
+  setRec('正在连本地识别桥…', 'wait');
+  fetch(BRIDGE + '/health').then(...).then(function (j) {
+    BRIDGE_OK = true;
+    setRec('识别桥已连接 · ' + ...);
+  }).catch(...);
+}
+```
+Add `BRIDGE_EXPS = j.experiments || [];` and append count.
+
+And identify():
+```js
+var eid = EXPID[STATE.exp];
+if (!eid) { setRec('这个实验还没登记到识别桥里，先换一个或手动录入。', 'bad'); return cb(false); }
+```
+→ use eidForExp; and if missing, message lists supported names.
+
+Let me patch via edit tool (file read requirement: I read parts earlier; the file changed since — need re-read? I read lines 218-279 and 556-585 earlier, then edited. The edit tool requires the file to have been read; it's been edited by me since, which counts as observation. Let me try edit directly with exact strings; if it errors, re-read.
+
+Strings:
+1) `var BRIDGE_OK = false;` → add `var BRIDGE_EXPS = [];`
+2) In probeBridge: after `BRIDGE_OK = true;` add `BRIDGE_EXPS = j.experiments || [];`
+3) Replace the EXPID guard block.
+
+Let me do these as a single PowerShell-based multi-replace? Chinese strings → encoding risk in command. Use edit tool with small ASCII-heavy anchors.
+
+Edit 1: old `var BRIDGE_OK = false;` new `var BRIDGE_OK = false;\nvar BRIDGE_EXPS = [];`
+Edit 2: old `    BRIDGE_OK = true;` new `    BRIDGE_OK = true;\n    BRIDGE_EXPS = j.experiments || [];`
+Edit 3: guard — old:
+`  var eid = EXPID[STATE.exp];
+  if (!eid) { setRec('这个实验还没登记到识别桥里，先换一个或手动录入。', 'bad'); return cb(false); }`
+new:
+`  var eid = eidForExp(STATE.exp);
+  if (!eid) {
+    var names = (BRIDGE_EXPS || []).map(function (e) { return e.name; });
+    setRec('识别桥还不支持「' + STATE.exp + '」。已接入：' + (names.join('、') || '（桥没启动）') +
+      '。换一个实验，或先点「没有密钥？用示例数据体验」。', 'bad');
+    return cb(false);
+  }`
+
+Plus add eidForExp function.
+
+Let me batch: do edits sequentially.
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"var BRIDGE_OK = false;\nvar BRIDGE_EXPS = [];                    /* /health 返回的已接入实验 */\nfunction eidForExp(name) {\n  var hit = (BRIDGE_EXPS || []).filter(function (e) { return e.name === name; })[0];\n  return hit ? hit.id : (EXPID[name] || null);\n}","old_string":"var BRIDGE_OK = false;"}
+
+[tool • edit]
+Error: cannot edit "C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html": file changed since it was read — re-read the file, then retry
+
+[assistant]
+
+
+[assistant • read]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","offset":566,"limit":40}
+
+[tool • read]
+<path>C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html</path>
+<type>file</type>
+<content>
+566: var EXPID = {
+567:   '用静态拉伸法测金属丝的杨氏弹性模量': 'young',
+568:   '钨的逸出功测定': 'tungsten'
+569: };
+570: function setRec(text, kind) {
+571:   var el = $('rec-status');
+572:   if (!el) return;
+573:   el.textContent = text;
+574:   el.style.color = (kind === 'bad') ? 'var(--bad)' : (kind === 'ok' ? 'var(--ok)' : 'var(--gray)');
+575: }
+576: function probeBridge() {
+577:   setRec('正在连本地识别桥…', 'wait');
+578:   fetch(BRIDGE + '/health').then(function (r) { return r.json(); }).then(function (j) {
+579:     BRIDGE_OK = true;
+580:     setRec('识别桥已连接 · ' + (j.mode === 'mock' ? '桩模式（不联网）' : '真实模式 · ' + j.model) +
+581:       (j.has_key ? '' : ' · 服务端无密钥'), j.has_key || j.mode === 'mock' ? 'ok' : 'bad');
+582:   }).catch(function () {
+583:     BRIDGE_OK = false;
+584:     setRec('识别桥没启动：在 07_流水线 里运行 python bridge.py --mock，或先「用示例数据体验」', 'bad');
+585:   });
+586: }
+587: function readB64(file, cb) {
+588:   var fr = new FileReader();
+589:   fr.onload = function () {
+590:     var s = String(fr.result);
+591:     cb(s.slice(s.indexOf(',') + 1), file.type || 'image/jpeg');
+592:   };
+593:   fr.onerror = function () { cb(null, null); };
+594:   fr.readAsDataURL(file);
+595: }
+596: function previewRec(j) {
+597:   var t1 = j.tables && j.tables.t1 && j.tables.t1.cells;
+598:   if (!t1 || !t1.length) return '';
+599:   var head = t1.slice(0, 3).map(function (row) {
+600:     return '<tr>' + row.slice(0, 6).map(function (v) { return '<td>' + (v === null ? '?' : v) + '</td>'; }).join('') + '</tr>';
+601:   }).join('');
+602:   return '<table class="mini"><tbody>' + head + '</tbody></table>' +
+603:     '<div class="fine">预览表 1 前 3 行（共 ' + t1.length + ' 行 × ' + t1[0].length + ' 列）</div>';
+604: }
+605: function identify(file, cb) {
+
+(Showing lines 566-605 of 888. Use offset=606 to continue.)
+</content>

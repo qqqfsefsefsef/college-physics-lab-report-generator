@@ -1,0 +1,19 @@
+paragraphs=126 tables=5 images=7
+header='南京信息工程大学-大学物理实验报告' footer='长度测量'
+bad=[]
+contains '4.385'    : True
+contains '-3.4'     : False
+contains '4.39 eV'  : True
+contains '1.3807'   : True
+contains '22.10'    : True
+contains '0.996'    : True
+contains '4.54'     : True
+calc: m=-22.09524 phi=4.3854 eV err=-3.40% u=0.1112 ratio_u=1.39
+variant exact 1/T: 4.4612 eV
+gate=True steps=['calc', 'import', 'render', 'review']
+formats=['docx', 'html']
+table 0: 2x8
+table 1: 9x9
+table 2: 9x9
+table 3: 4x9
+table 4: 1x1

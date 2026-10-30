@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>物理实验报告生成器 · 原型 v2</title>
+<style>
+  :root{
+    --ink:#1b1f24; --sub:#5b6673; --line:#e3e7ec; --bg:#f6f7f9; --card:#fff;
+    --blue:#2b6cf6; --blue-d:#1b52c4; --ok:#0f9d58; --warn:#c47d00; --bad:#d0342c;
+    --gray:#6b7684;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.6 "Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    height:52px; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:10px; padding:0 18px; position:sticky; top:0; z-index:30;
+  }
+  .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#2b6cf6,#6aa0ff);}
+  .topbar b{font-weight:600;font-size:15px}
+  .topbar .sp{flex:1}
+  .topbar a{color:var(--sub);text-decoration:none;font-size:13px;border-bottom:1px dashed #cfd6de;cursor:pointer}
+  main{max-width:940px;margin:0 auto;padding:26px 18px 80px}
+  .screen{display:none;animation:fade .18s ease}
+  .screen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  h1{font-size:22px;margin:6px 0 6px;letter-spacing:.3px}
+  h2{font-size:17px;margin:0 0 12px}
+  p.lead{color:var(--sub);margin:0 0 22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .card.tight{padding:14px 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  .pathcard{cursor:pointer;transition:.15s;position:relative}
+  .pathcard:hover{border-color:#c3d4f7;box-shadow:0 6px 18px rgba(43,108,246,.08);transform:translateY(-1px)}
+  .pathcard h3{margin:0 0 6px;font-size:16px}
+  .pathcard .t{color:var(--sub);font-size:13px;min-height:42px}
+  .pathcard .go{color:var(--blue);font-size:13px;font-weight:600}
+  .pathcard.off{opacity:.62;cursor:not-allowed}
+  .pathcard.off:hover{transform:none;box-shadow:none;border-color:var(--line)}
+  .tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:20px;background:#eef3ff;color:var(--blue-d);margin-left:8px;vertical-align:2px}
+  .tag.gray{background:#f0f2f5;color:var(--gray)}
+  label.f{display:block;font-size:13px;color:var(--sub);margin:12px 0 5px}
+  input[type=text],input[type=password],select,textarea{
+    width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;background:#fff;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:#9dbcfb;box-shadow:0 0 0 3px rgba(43,108,246,.1)}
+  .hint{font-size:12px;color:var(--gray);margin-top:6px}
+  .mini{border-collapse:collapse;font-size:12px}
+  .mini td{border:1px solid #dde3ea;padding:2px 6px;text-align:center;color:#3a4353}
+  .row{display:flex;gap:10px;align-items:center}
+  .btn{
+    border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;
+    padding:9px 16px;font:inherit;cursor:pointer;transition:.12s
+  }
+  .btn:hover{border-color:#c3d4f7}
+  .btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+  .btn.pri:hover{background:var(--blue-d);border-color:var(--blue-d)}
+  .btn.pri:disabled{background:#c8d5ea;border-color:#c8d5ea;cursor:not-allowed}
+  .btn.sm{padding:6px 12px;font-size:13px}
+  .btn.ghost{border-color:transparent;color:var(--blue)}
+  .up{
+    border:1.5px dashed #cfd8e3;border-radius:12px;padding:16px;text-align:center;color:var(--sub);
+    background:#fcfdff;cursor:pointer;transition:.12s
+  }
+  .up:hover{border-color:#9dbcfb;background:#f7faff}
+  .up.done{border-style:solid;border-color:#bfe3c9;background:#f4fbf6;color:#1c7a44}
+  .up .fn{font-size:13px;margin-top:4px;word-break:break-all}
+  .chk{display:flex;gap:9px;align-items:flex-start;margin:9px 0;font-size:13.5px;cursor:pointer}
+  .chk input{margin-top:3px}
+  .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+  table.grid{border-collapse:collapse;width:100%;font-size:13px}
+  table.grid th,table.grid td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:center;white-space:nowrap}
+  table.grid th{background:#fafbfd;color:var(--sub);font-weight:600;position:sticky;top:0}
+  table.grid input{width:66px;border:1px solid transparent;border-radius:6px;text-align:center;padding:4px 2px;font:inherit;background:transparent}
+  table.grid input:hover{border-color:var(--line)}
+  table.grid input:focus{border-color:#9dbcfb;background:#fff}
+  table.grid td.changed input{background:#fff8e6;border-color:#f0d9a3}
+    .msg.bot{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.me{background:#eef3ff;border-bottom-right-radius:4px;align-self:flex-end}
+  .msg .who{font-size:11.5px;color:var(--gray);margin-bottom:3px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:640px){.kpis{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .v{font-size:22px;font-weight:700;letter-spacing:.3px}
+  .kpi .k{font-size:12px;color:var(--gray);margin-top:2px}
+  .bar{height:6px;border-radius:4px;background:#e9eef5;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--blue);transition:width .3s}
+  .steps{font-size:13px;color:var(--sub);margin-top:10px;min-height:22px}
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,26,34,.28);backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px
+  }
+  .overlay.hide{display:none}
+  .sheet{
+    background:#fff;border-radius:16px;max-width:560px;width:100%;padding:24px 26px;
+    box-shadow:0 24px 60px rgba(15,23,42,.24)
+  }
+  .sheet h2{margin:0 0 10px}
+  .sheet p{color:#3d4753;margin:0 0 10px;font-size:13.5px}
+  .sheet .fine{font-size:12px;color:var(--gray)}
+  .fine{font-size:12px;color:var(--gray)}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  #toast{
+    position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(10px);
+    background:#1b1f24;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;
+    opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:80vw
+  }
+  #toast.on{opacity:1;transform:translateX(-50%)}
+  .stepsbar{display:flex;gap:8px;font-size:12px;color:var(--gray);margin-bottom:18px;flex-wrap:wrap}
+  .stepsbar span{padding:2px 9px;border-radius:20px;background:#eef1f5}
+  .stepsbar span.cur{background:#e6efff;color:var(--blue-d);font-weight:600}
+  .stepsbar span.done{background:#eaf7ee;color:#1c7a44}
+  .warnbox{border:1px solid #f0d9a3;background:#fffaf0;border-radius:10px;padding:10px 12px;font-size:13px;color:#8a5a00}
+  .okbox{border:1px solid #bfe3c9;background:#f4fbf6;border-radius:10px;padding:10px 12px;font-size:13px;color:#1c7a44}
+  .badbox{border:1px solid #f2c4c0;background:#fff5f4;border-radius:10px;padding:10px 12px;font-size:13px;color:#a3231b}
+  .muted{color:var(--gray);font-size:12.5px}
+  .inline{display:inline-flex;gap:6px;align-items:center}
+  .num{font-variant-numeric:tabular-nums}
+  .fmt{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .fmt button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}
+  .fmt button.on{border-color:var(--blue);background:#eef3ff;color:var(--blue-d);font-weight:600}
+
+.mm{margin:10px 0 14px;padding:12px 14px;border:1px solid #f0c36d;background:#fff8e6;
+  border-radius:10px;font-size:13px;line-height:1.7;color:#7a5b12}
+.mm b{color:#5c4408}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0 10px;background:#fff}
+  .qtop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .qno{font-size:12px;color:#8a939c}
+  .qloc{font-weight:700;font-size:14.5px;color:#22303c}
+  .qwhy{color:#5b6672;font-size:13px;line-height:1.7;margin-bottom:10px}
+  .qopts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .qopt{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid #cfd8e3;
+    border-radius:999px;background:#fbfcfd;font-size:14px;cursor:pointer;line-height:1}
+  .qopt:hover{border-color:var(--pri);background:#f2f7ff}
+  .qopt b{font-weight:700;font-variant-numeric:tabular-nums}
+  .qopt.cur{border-style:dashed;color:#3b6ea5}
+  .qopt.sel{border-color:var(--pri);background:var(--pri);color:#fff}
+  .qfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+  .qtip{font-size:12px;color:#8a939c}
+  .qact{margin-top:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .grid td.hl{background:#fff7d6;box-shadow:inset 0 0 0 2px #f0c36d}
+  .rtitle{font-weight:700;font-size:14px;margin:2px 0 2px}
+.rsub{color:#8a939c;font-size:12px;margin-bottom:10px;line-height:1.6}
+.empty{border:1px dashed #d6dde5;border-radius:10px;padding:22px;text-align:center;
+  color:#8a939c;font-size:13px;line-height:1.8;background:#fbfcfd}
+  /* 首页：两个入口居中、并排 */
+  .homewrap{min-height:calc(100vh - 190px);display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;gap:14px}
+  .homewrap h1,.homewrap .lead{margin:0 auto;text-align:center}
+  .paths{display:flex;flex-direction:column;gap:14px;width:min(520px,100%);margin-top:10px}
+  .paths .pathcard{text-align:center;align-items:center;gap:6px;padding:18px 20px}
+  .paths .pathcard .t{font-size:13px;line-height:1.65}
+  /* 素材三栏横排 */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid3 .card{min-width:0}
+  .ct{font-weight:600;margin-bottom:10px;font-size:14px}
+  /* 小字按需显示：没有内容就整行不占位 */
+  .hint.auto:empty{display:none}
+  #rec-preview{max-height:132px;overflow:auto;border-radius:8px}
+  #rec-preview .mini{font-size:11px}
+  @media(max-width:900px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"></div>
+  <b>物理实验报告生成器</b>
+  <span class="tag gray">原型 v2 · 仅界面演示</span>
+  <div class="sp"></div>
+  <a onclick="openNotice()">数据与结果说明</a>
+  <a onclick="setupConn()" title="识别桥地址与访问口令">连接设置</a>
+</div>
+
+<main>
+  <!-- S1 首页 -->
+  <section id="s-home" class="screen on">
+    <div class="homewrap">
+      <h1>把你的实验数据，变成一份能交的报告</h1>
+      <p class="lead">上传原始数据页 → 核对数字 → 按学校模板出 PDF / Word。数字全部由你的数据算出。</p>
+      <div class="paths">
+        <div class="card pathcard" onclick="go('s-api')">
+          <h3>自带 API <span class="tag">推荐</span></h3>
+          <div class="t">用你在开放平台申请的密钥和额度，密钥只在本次会话的内存里。</div>
+          <div class="go">开始配置 →</div>
+        </div>
+        <div class="card pathcard off" id="card-official" onclick="officialTap()">
+          <h3>官方通道 <span class="tag gray" id="official-tag">未开放</span></h3>
+          <div class="t">提交兑换码即可用，一次一码。测试阶段暂未开放。</div>
+          <div class="go" style="color:var(--gray)">暂不可用</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S2 API 配置 -->
+  <section id="s-api" class="screen">
+    <div class="stepsbar"><span class="cur">1 接入</span><span>2 素材</span><span>3 核对</span><span>4 结果</span></div>
+    <h2>接入你自己的模型</h2>
+    <p class="lead">需要三个信息：接口地址、模型名、密钥。密钥不会离开这个页面。</p>
+    <div class="card">
+      <label class="f">接口地址 base_url</label>
+      <input id="api-url" type="text" value="https://api.deepseek.com/v1" placeholder="https://…/v1">
+      <label class="f">模型名 model</label>
+      <input id="api-model" type="text" value="deepseek-v4-flash-vision-exp" placeholder="需要支持图片输入的模型">
+      <label class="f">密钥 api key</label>
+      <div class="row">
+        <input id="api-key" type="password" placeholder="sk-…（只在内存里，刷新即失效）">
+        <button class="btn sm" onclick="togglePwd()">显示</button>
+      </div>
+      <div class="hint">密钥只存在这个页面里，不写盘、不写 cookie。</div>
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn" id="btn-test" onclick="testConn()">测试连接</button>
+        <span class="muted" id="api-status">未测试</span>
+      </div>
+      <div id="api-msg"></div>
+      <div class="divider"></div>
+      <div class="row" style="flex-wrap:wrap">
+        <button class="btn pri" id="api-next" onclick="nextFromApi()">下一步：上传素材</button>
+        <button class="btn ghost" onclick="useDemo()">没有密钥？用示例数据体验</button>
+            <button class="btn ghost" onclick="useMockRec()">没有密钥？用桩数据试识别</button>
+      </div>
+
+    </div>
+    <div class="card tight">
+      <div class="muted">官方通道的兑换码流程和这里一致，只是把「填自己的密钥」换成「填兑换码」，当前未开放。</div>
+    </div>
+  </section>
+
+  <!-- S3 兑换码 -->
+  <section id="s-code" class="screen">
+    <div class="stepsbar"><span class="cur">1 接入</span><span>2 素材</span><span>3 核对</span><span>4 结果</span></div>
+    <h2>兑换码通道</h2>
+    <div class="card">
+      <div class="badbox">该通道当前未开放（测试阶段）。想内测请联系作者获取兑换码。</div>
+      <label class="f">兑换码</label>
+      <input type="text" placeholder="XXXX-XXXX" disabled>
+      <div class="hint">一次一码，用后即失效。</div>
+      <div class="divider"></div>
+      <button class="btn" onclick="go('s-home')">返回首页</button>
+    </div>
+  </section>
+
+  <!-- S4 上传 + 选实验 + 格式 -->
+  <section id="s-upload" class="screen">
+    <div class="stepsbar"><span class="done">1 接入</span><span class="cur">2 素材</span><span>3 核对</span><span>4 结果</span></div>
+    <h2>上传素材</h2>
+    <p class="lead">自动认出实验、收三样素材、选格式。</p>
+    <div class="okbox hide" id="draft-banner" style="margin-bottom:14px"></div>
+    <div class="okbox" id="demo-banner" style="display:none;margin-bottom:14px">
+      示例模式：用内置的一组示例数据跑通流程，不用上传照片、不消耗额度。<b>生成的报告会标注「示例数据」</b>，不能直接提交。
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:600">做的是哪个实验？<span class="tag gray">自动识别</span></div>
+          <div class="muted" id="exp-detect">先传原始数据页，我看完自己判断——不用你选</div>
+        </div>
+        <button class="btn sm" id="exp-edit" onclick="toggleExp()">认不出？手动选</button>
+      </div>
+      <select id="exp-sel" style="display:none;margin-top:10px" onchange="onExpPicked(this.value)">
+        <option>用静态拉伸法测金属丝的杨氏弹性模量</option>
+        <option>光电效应的研究</option>
+        <option>钨的逸出功测定</option>
+        <option>固体线膨胀系数的测定</option>
+        <option>液体表面张力系数测定</option>
+        <option>验证马吕斯定律</option>
+        <option>用分光计测量三棱镜的折射率</option>
+        <option>光速测定</option>
+        <option>迈克耳孙干涉仪</option>
+        <option>用霍尔效应测磁场</option>
+        <option>霍尔效应及其应用</option>
+      </select>
+      <div class="hint auto" id="exp-hint" style="margin-top:8px"></div>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="ct">原始数据页 <span style="color:var(--bad)">*</span></div>
+        <label class="up" id="up-data" for="f-data">
+          <div>点这里选照片</div>
+          <div class="fn" id="fn-data"></div>
+          <input id="f-data" type="file" accept="image/*" hidden onchange="pick(this,'up-data','fn-data')">
+        </label>
+        <div class="hint auto" id="rec-status" style="margin-top:8px"></div>
+        <div id="rec-preview" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="ct">以前做过的作业 <span style="color:var(--bad)">*</span></div>
+        <label class="up" id="up-hw" for="f-hw">
+          <div>点这里选 docx</div>
+          <div class="fn" id="fn-hw"></div>
+          <input id="f-hw" type="file" accept=".docx,.pdf,.doc" hidden onchange="pick(this,'up-hw','fn-hw')">
+        </label>
+        <div class="hint auto" id="hw-tip" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="ct">学习通截图 <span class="tag gray">可跳过</span></div>
+        <label class="up" id="up-shot" for="f-shot">
+          <div>点这里选截图</div>
+          <div class="fn" id="fn-shot"></div>
+          <input id="f-shot" type="file" accept="image/*" hidden onchange="pick(this,'up-shot','fn-shot')">
+        </label>
+        <div class="hint auto" id="shot-tip" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:600">输出格式</div>
+      <div class="fine" style="margin-top:2px">可多选，不加价；作业一般交 PDF。</div>
+      <div class="fmt" id="fmt-box">
+        <button data-f="pdf" class="on" onclick="toggleFmt(this)">PDF <span class="muted">推荐</span></button>
+        <button data-f="docx" class="on" onclick="toggleFmt(this)">Word</button>
+        <button data-f="json" onclick="toggleFmt(this)">JSON</button>
+        <button data-f="png" onclick="toggleFmt(this)">图表 PNG</button>
+      </div>
+      <div class="divider"></div>
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="muted" id="cost">预计消耗约 8k tokens ≈ ¥0.05（你自己的额度）</div>
+        <div class="row">
+          <button class="btn" onclick="go('s-home')">返回</button>
+          <button class="btn pri" id="btn-gen" disabled onclick="startGen()">生成报告</button>
+        </div>
+      </div>
+      <div class="hint auto" id="gen-hint"></div>
+    </div>
+  </section>
+
+  <!-- S5 核对 -->
+  <section id="s-review" class="screen">
+    <div class="stepsbar"><span class="done">1 接入</span><span class="done">2 素材</span><span class="cur">3 核对</span><span>4 结果</span></div>
+    <h2>第 3 步 · 看一眼这些数字对不对</h2>
+    <p class="lead">数字是从照片里认出来的。<b>拿它和你纸上的表格对一遍</b>，错格的直接点它改。<b>报告里只认这张表</b>，不会再去看照片。</p>
+    <div id="mm" class="mm" style="display:none"></div>
+
+    <div id="rec-note" class="hint" style="display:none;margin-bottom:8px"></div>
+    <div id="rec-wrap" style="display:none"></div>
+    <div class="tablewrap" id="t-review-wrap">
+      <table class="grid" id="t-review">
+        <thead>
+          <tr><th>次数</th><th>荷载/kg</th><th>增重读数</th><th>减重读数</th><th>平均</th><th>N</th></tr>
+        </thead>
+        <tbody id="t-review-body"></tbody>
+      </table>
+    </div>
+    <div class="hint">表里显示几位，计算就用几位。</div>
+    <div id="conflict"></div>
+
+    <!-- 选择题：一次一道，和表格同宽，选项横向排 -->
+    <div id="quiz" class="quiz" style="display:none">
+      <div class="qtop">
+        <span class="qno">第 <b id="q-idx">1</b> / <b id="q-total">1</b> 题</span>
+        <span class="qloc" id="q-loc"></span>
+      </div>
+      <div class="qwhy" id="q-why"></div>
+      <div class="qopts" id="q-opts"></div>
+      <div class="qfoot">
+        <span class="qtip" id="q-tip">选一个，或者先去表里直接改那个格子</span>
+        <button class="btn sm" type="button" onclick="qSkip()">先跳过这题</button>
+      </div>
+    </div>
+
+    <div class="qact">
+      <button class="btn pri" id="btn-ok" onclick="go('s-gen')" disabled>数字都对，生成报告</button>
+      <div class="hint" id="ok-hint"></div>
+    </div>
+  </section>
+
+  <!-- S6 生成中 -->
+  <section id="s-gen" class="screen">
+    <div class="stepsbar"><span class="done">1 接入</span><span class="done">2 素材</span><span class="done">3 核对</span><span class="cur">4 结果</span></div>
+    <h2>正在生成</h2>
+    <div class="card">
+      <div class="bar"><i id="gen-bar"></i></div>
+      <div class="steps" id="gen-step">准备中…</div>
+      <div class="divider"></div>
+      <div class="muted">这一步用的是已核对的数据，不会重新识别照片。可以切到别的标签页，回来还在。</div>
+    </div>
+  </section>
+
+  <!-- S7 结果 -->
+  <section id="s-result" class="screen">
+    <div class="stepsbar"><span class="done">1 接入</span><span class="done">2 素材</span><span class="done">3 核对</span><span class="cur">4 结果</span></div>
+    <h2 id="res-h">报告已生成</h2>
+    <p class="lead" id="res-sub">用静态拉伸法测金属丝的杨氏弹性模量 · 2026-10-27</p>
+
+    <div class="kpis" style="margin-bottom:14px">
+      <div class="kpi"><div class="v num" id="k-y">—</div><div class="k">主结果</div></div>
+      <div class="kpi"><div class="v num" id="k-u">—</div><div class="k">与公认值的相对误差</div></div>
+      <div class="kpi"><div class="v num" id="k-e">—</div><div class="k">不确定度</div></div>
+    </div>
+
+    <div id="res-usage" class="hint" style="margin:6px 0 2px;display:none"></div>
+    <div id="res-err" class="mm" style="display:none;margin-bottom:12px"></div>
+    <div class="card">
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <button class="btn pri" id="btn-dl" onclick="toast('演示环境：正式版这里直接下载' + fmtList() + '文件')">下载报告</button>
+        <button class="btn" onclick="toast('演示环境：不生成真实文件')">预览排版</button>
+        <div class="sp" style="flex:1"></div>
+        <button class="btn" onclick="go('s-again')">生成得不对？重新生成</button>
+      </div>
+      <div class="divider"></div>
+      <div class="fine" style="line-height:1.75">
+        本报告的数据来自你上传的原始数据页，所有数字由程序按教材公式计算，生成后请自行校对一遍再提交。<br>
+        本工具是排版与计算辅助，不代替实验，不对测量数据的真实性负责。
+      </div>
+    </div>
+
+    <div class="card tight">
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="muted">用完记得清理：密钥、上传的文件、开放平台的调用记录。</div>
+        <button class="btn sm" onclick="go('s-clean')">清理我的密钥与文件</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- S8 重新生成 -->
+  <section id="s-again" class="screen">
+    <h2>重新生成</h2>
+    <p class="lead">不用整份重来。数据已经核对过，默认只重写文字、重排版面。</p>
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:4px">哪里不对？（可多选）</div>
+      <label class="chk"><input type="checkbox">数字或读数识别错了</label>
+      <label class="chk"><input type="checkbox">文字风格不像我写的</label>
+      <label class="chk"><input type="checkbox">图表不对 / 缺图</label>
+      <label class="chk"><input type="checkbox">格式或排版问题</label>
+      <label class="chk"><input type="checkbox">模板用错了（实验选错）</label>
+      <label class="chk"><input type="checkbox">其他</label>
+      <label class="f">补充说明（可选）</label>
+      <textarea rows="3" placeholder="例如：体会部分太像模板，请按我上一篇的语气写"></textarea>
+      <div class="divider"></div>
+      <label class="chk"><input type="checkbox" checked>沿用已核对的数据（建议）</label>
+      <div class="hint">沿用数据只重写文字，花费约为完整流程的 1/10。</div>
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn pri" onclick="regen()">提交并重新生成</button>
+        <button class="btn" onclick="go('s-result')">返回结果</button>
+      </div>
+      <div class="hint">只记选项和耗时，不记你的图片与姓名。</div>
+    </div>
+  </section>
+
+  <!-- S9 清理 -->
+  <section id="s-clean" class="screen">
+    <h2>清理</h2>
+    <p class="lead">密钥和文件都不该留在这个工具里。三件事，勾完就算清干净。</p>
+    <div class="card">
+      <label class="chk"><input type="checkbox" id="c1" onchange="cleanCk()"><span><b>我们的密钥副本已删除。</b><br><span class="muted">页面里保存的密钥变量已清空，刷新后需要重新填写。</span></span></label>
+      <label class="chk"><input type="checkbox" id="c2" onchange="cleanCk()"><span><b>开放平台的调用记录。</b><br><span class="muted">去你申请密钥的平台 → API Keys → 删除这一条，避免它继续可用。</span></span></label>
+      <label class="chk"><input type="checkbox" id="c3" onchange="cleanCk()"><span><b>上传的图片与作业文件。</b><br><span class="muted">服务端默认 24 小时内删除；本机缓存已在清理时清空。</span></span></label>
+      <div class="divider"></div>
+      <button class="btn pri" id="btn-clean" disabled onclick="doneClean()">我已完成</button>
+      <span class="muted" style="margin-left:8px">三件都勾选后解锁</span>
+    </div>
+    <div class="card tight">
+      <div class="muted">想再生成一份，回首页即可；已生成的项目仍在你本地。</div>
+    </div>
+  </section>
+</main>
+
+<!-- S0 公告 -->
+<div class="overlay" id="notice">
+  <div class="sheet">
+    <h2>先说清楚这个工具做什么</h2>
+    <p><b>它只做三件事</b>：识别你上传的原始数据记录页、按教材公式计算、按学校模板排版。</p>
+    <p>报告里的每个测量值都来自你自己拍的那张纸，<b>我们不生成、不修改、也不"补全"任何数字</b>。某处识别错了，在核对页改掉再生成即可。</p>
+    <p>它是排版与计算辅助，不代替实验，也不对测量数据的真实性负责。提交前请自己再校对一遍。</p>
+    <div class="divider"></div>
+    <button class="btn pri" onclick="acceptNotice()">我已知晓</button>
+    <div class="fine" style="margin-top:10px">上方链接可随时重新打开这段说明。</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ---------- 状态 ---------- */
+var FLAGS = { official: false };          /* 官方通道开关：上线前保持 false */
+var STATE = {
+  api: { url: '', model: '', key: '', tested: false },
+  files: { data: false, hw: false, shot: false },
+  fmt: { pdf: true, docx: true, json: false, png: false },
+  exp: '用静态拉伸法测金属丝的杨氏弹性模量',
+  reviewed: {},      /* 已确认的问题 id */
+  regenerated: 0
+};
+
+var $ = function (id) { return document.getElementById(id); };
+
+/* ---------- 草稿：刷新/关页不丢进度（不存密钥，不存文件内容） ---------- */
+var DRAFT_KEY = 'dsh.draft.v1';
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      exp: STATE.exp,
+      expId: STATE.expId || '',
+      files: STATE.files,
+      fmt: STATE.fmt,
+      rec: STATE.rec ? { exp_id: STATE.rec.exp_id, tables: STATE.rec.tables, notes: STATE.rec.notes, meta: STATE.rec.meta } : null,
+      style: STATE.style ? { summary: STATE.style.summary, stats: STATE.style.stats } : null,
+      t: Date.now()
+    }));
+  } catch (e) { /* 存不下就算了，不影响主流程 */ }
+}
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+function loadDraft() {
+  var raw = null;
+  try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return false; }
+  if (!raw) return false;
+  var d = null;
+  try { d = JSON.parse(raw); } catch (e) { return false; }
+  if (!d || !d.exp) return false;
+  STATE.exp = d.exp;
+  if (d.expId) STATE.expId = d.expId;
+  if (d.files) STATE.files = { data: !!d.files.data, hw: !!d.files.hw, shot: !!d.files.shot };
+  if (d.fmt) STATE.fmt = d.fmt;
+  if (d.rec && d.rec.tables) STATE.rec = d.rec;
+  if (d.style) STATE.style = { summary: d.style.summary, stats: d.style.stats || {} };
+  return !!(STATE.rec || STATE.files.data);
+}
+function restoreBanner() {
+  var el = $('draft-banner');
+  if (!el) return;
+  el.classList.remove('hide');
+  el.innerHTML = '上次的进度还在：<b>' + esc(STATE.exp) + '</b>' +
+    (STATE.rec ? '（已认到 ' + Object.keys(STATE.rec.tables || {}).length + ' 张表）' : '') +
+    '　<a href="javascript:void(0)" onclick="dropDraft()">不用了，重新开始</a>';
+  /* 把界面也画回去，不然只是状态有、页面空 */
+  var det = $('exp-detect');
+  if (det) det.textContent = STATE.exp + ' · 上次的草稿';
+  var sel = $('exp-sel');
+  if (sel) sel.value = STATE.exp;
+  if (STATE.files.data) { var ud = $('up-data'); if (ud) ud.classList.add('done'); }
+  if (STATE.files.hw) {
+    var uh = $('up-hw'); if (uh) uh.classList.add('done');
+    var fh = $('fn-hw'); if (fh) fh.textContent = '（上次传过，可重传）';
+    if (STATE.style && STATE.style.summary) {
+      var t = $('hw-tip');
+      if (t) { t.className = 'hint ok'; t.innerHTML = '<b>读到了：</b>' + esc(STATE.style.summary); }
+    }
+  }
+  if (STATE.files.shot) {
+    var us = $('up-shot'); if (us) us.classList.add('done');
+    var fs = $('fn-shot'); if (fs) fs.textContent = '（上次传过，可重传）';
+    var s = $('shot-tip');
+    if (s) { s.className = 'hint ok'; s.textContent = '上次的截图还在，出报告时会贴进去'; }
+  }
+  if (STATE.rec && STATE.rec.tables) {
+    var box = $('rec-preview');
+    if (box) box.innerHTML = previewRec(STATE.rec);
+    var notes = (STATE.rec.notes || []).length;
+    setRec('上次已识别到 ' + Object.keys(STATE.rec.tables).length + ' 张表' +
+      (notes ? '，' + notes + ' 处待确认' : '') + ' · 直接生成或重传', 'ok');
+  }
+}
+function dropDraft() {
+  clearDraft();
+  STATE.rec = null; STATE.style = null; STATE.out = null;
+  STATE.files = { data: false, hw: false, shot: false };
+  var b = $('draft-banner'); if (b) b.classList.add('hide');
+  var t = $('hw-tip'); if (t) t.textContent = '';
+  var s = $('shot-tip'); if (s) s.textContent = '';
+  var st = $('rec-status'); if (st) st.textContent = '';
+  var pv = $('rec-preview'); if (pv) pv.innerHTML = '';
+  ['up-data', 'up-hw', 'up-shot'].forEach(function (id) { var e = $(id); if (e) e.classList.remove('done'); });
+  ['fn-data', 'fn-hw', 'fn-shot'].forEach(function (id) { var e = $(id); if (e) e.textContent = ''; });
+  syncGen();
+  toast('已清掉草稿，重新来');
+}
+
+/* ---------- 屏幕切换 ---------- */
+function go(id) {
+  var all = document.querySelectorAll('.screen');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('on');
+  var el = $(id);
+  if (el) el.classList.add('on');
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  saveDraft();
+  if (id === 's-review') buildReview();
+  if (id === 's-upload') probeBridge();
+  if (id === 's-gen') runGen();
+  if (id === 's-result') fillResult();
+}
+
+/* ---------- S0 ---------- */
+function setupConn() {
+  var b = window.prompt('识别桥地址（默认 http://127.0.0.1:8732；'
+    + '部署后用你的域名/隧道地址）', BRIDGE);
+  if (b === null) return;
+  b = String(b).trim().replace(/\/+$/, '');
+  var t = window.prompt('访问口令（服务器没设 BRIDGE_TOKEN 就留空）', BRIDGE_TOKEN);
+  if (t === null) return;
+  t = String(t).trim();
+  try {
+    if (b) localStorage.setItem('dsh.bridge', b); else localStorage.removeItem('dsh.bridge');
+    if (t) localStorage.setItem('dsh.token', t); else localStorage.removeItem('dsh.token');
+  } catch (e) {}
+  location.reload();
+}
+
+function openNotice() { $('notice').classList.remove('hide'); }
+function acceptNotice() {
+  $('notice').classList.add('hide');
+  try { localStorage.setItem('notice.ok', '1'); } catch (e) {}
+}
+
+/* ---------- S2 ---------- */
+var TESTING = false;
+var API_SIG = '';                        /* 最近一次通过的参数指纹 */
+
+function togglePwd() {
+  var k = $('api-key');
+  k.type = (k.type === 'password') ? 'text' : 'password';
+}
+
+function apiSig() {
+  return [$('api-url').value.trim(), $('api-model').value.trim(), $('api-key').value.trim()].join('|');
+}
+function apiFields() {
+  return { u: $('api-url').value.trim(), m: $('api-model').value.trim(), k: $('api-key').value.trim() };
+}
+function nextFromApi() {
+  var f = apiFields(), box = $('api-msg');
+  box.innerHTML = '';
+  if (!f.u || !f.m || !f.k) {
+    box.innerHTML = '<div class="badbox">三项都填了才能继续：接口地址、模型名、密钥。没有密钥也可以点下面的「用示例数据体验」，先把流程走完。</div>';
+    var first = !f.u ? $('api-url') : (!f.m ? $('api-model') : $('api-key'));
+    if (first && first.focus) first.focus();
+    return;
+  }
+  if (STATE.api.tested && apiSig() === API_SIG) { go('s-upload'); return; }
+  testConn(function () { go('s-upload'); });      /* 没测过就当点「下一步」时自动补测一次 */
+}
+function testConn(after) {
+  var f = apiFields(), box = $('api-msg'), st = $('api-status'), btn = $('btn-test');
+  if (TESTING) return;                            /* 连点只跑一次 */
+  box.innerHTML = '';
+  if (!f.u || !f.m || !f.k) {
+    st.textContent = '未测试';
+    box.innerHTML = '<div class="badbox">三项都要填才能测试。</div>';
+    return;
+  }
+  if (STATE.api.tested && apiSig() === API_SIG) {  /* 参数没变就不再打一遍网络请求 */
+    st.textContent = '已通过 · 未改动';
+    box.innerHTML = '<div class="okbox">这组参数已经测过了，直接下一步就行。</div>';
+    if (after) after();
+    return;
+  }
+  TESTING = true;
+  btn.disabled = true;
+  btn.textContent = '测试中…';
+  st.textContent = '测试中…';
+  setTimeout(function () {
+    TESTING = false;
+    btn.disabled = false;
+    btn.textContent = '测试连接';
+    if (f.k.length < 12) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>密钥无效</b>：格式看起来不对（太短）。请回开放平台复制完整的 key。</div>';
+      return;
+    }
+    if (!/^https?:\/\//.test(f.u)) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>地址不通</b>：base_url 要以 http(s):// 开头，并指向兼容 OpenAI 格式的接口。</div>';
+      return;
+    }
+    if (!/vision|vl|image|v4/i.test(f.m)) {
+      st.textContent = '失败';
+      box.innerHTML = '<div class="badbox"><b>模型不支持图片</b>：这个模型读不了照片，换一个能看图的模型。</div>';
+      return;
+    }
+    st.textContent = '通过 · 格式校验';
+    box.innerHTML = '<div class="okbox">格式检查通过。正在和模型真连一次…</div>';
+    STATE.api = { url: f.u, model: f.m, key: f.k, tested: true };
+    API_SIG = apiSig();
+    /* 真连通性：让本地桥带一次 1 token 的请求；桥没起就退化成格式校验 */
+    fetch(BRIDGE + '/ping', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: f.k, base_url: f.u, model: f.m })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.ok) {
+        st.textContent = '通过 · 真实连通 ' + j.ms + 'ms';
+        box.innerHTML = '<div class="okbox">连接成功：密钥有效、模型可用、能看图片。</div>';
+      } else {
+        st.textContent = '通过 · 仅格式校验';
+        box.innerHTML = '<div class="okbox">格式没问题，但没能和模型真连上：' +
+          ((j && j.error) || '未知原因') + '。读取照片时会再报一次。</div>';
+      }
+    }).catch(function () {
+      st.textContent = '通过 · 仅格式校验';
+      box.innerHTML = '<div class="okbox">格式检查通过（识别桥没启动，没能真连一次）。' +
+        '真识别前请先运行 启动.ps1。</div>';
+    });
+    if (after) after();
+  }, 900);
+}
+function useDemo() {
+  STATE.demo = true;
+  STATE.files = { data: true, hw: true, shot: false };
+  var b = $('demo-banner');
+  if (b) b.style.display = 'block';
+  var c = $('cost');
+  if (c) c.textContent = '示例模式：不调用模型，也不消耗额度';
+  syncGen();
+  go('s-upload');
+  toast('已切到示例模式，可以直接生成');
+}
+
+/* ---------- S3 ---------- */
+function useMockRec() {
+  STATE.mockRec = true;
+  STATE.demo = false;
+  var b = $('demo-banner');
+  if (b) b.style.display = 'block';
+  if (b) b.textContent = '桩数据模式：识别不联网、不花钱，报告会标注「示例数据（不能直接提交）」。';
+  var c = $('cost');
+  if (c) c.textContent = '桩数据模式：不调用模型，也不消耗额度';
+  syncGen();
+  go('s-upload');
+  toast('已切到桩数据模式：其他流程都一样，只是识别结果不是真的');
+}
+
+function officialTap() {
+  if (FLAGS.official) { go('s-code'); return; }
+  toast('官方通道未开放，想内测可以联系作者拿兑换码');
+}
+
+/* ---------- S4 ---------- */
+function toggleExp() {
+  var s = $('exp-sel');
+  s.style.display = (s.style.display === 'none') ? 'block' : 'none';
+  s.onchange = function () { STATE.exp = s.value; $('exp-detect').textContent = s.value; };
+}
+/* ---------- 识别桥（07_流水线/bridge.py） ---------- */
+var BRIDGE = (function () {
+  try { var s = localStorage.getItem('dsh.bridge'); if (s) return s.replace(/\/+$/, ''); } catch (e) {}
+  var h = location.hostname;
+  if (h && h !== '127.0.0.1' && h !== 'localhost') return 'http://' + h + ':8732';
+  return 'http://127.0.0.1:8732';
+})();
+var BRIDGE_TOKEN = (function () { try { return localStorage.getItem('dsh.token') || ''; } catch (e) { return ''; } })();
+/* 所有发往识别桥的请求自动带口令（BRIDGE_TOKEN 为空时行为不变） */
+(function () {
+  var raw = window.fetch.bind(window);
+  window.fetch = function (u, o) {
+    o = o || {};
+    if (typeof u === 'string' && u.indexOf(BRIDGE) === 0 && BRIDGE_TOKEN) {
+      var h = {};
+      var oh = o.headers || {};
+      for (var k in oh) if (Object.prototype.hasOwnProperty.call(oh, k)) h[k] = oh[k];
+      h['X-Token'] = BRIDGE_TOKEN;
+      o.headers = h;
+    }
+    return raw(u, o);
+  };
+})();
+var BRIDGE_OK = false;
+var BRIDGE_EXPS = [];                    /* /health 返回的已接入实验 */
+function eidForExp(name) {
+  var hit = (BRIDGE_EXPS || []).filter(function (e) { return e.name === name; })[0];
+  return hit ? hit.id : (EXPID[name] || null);
+}
+var EXPID = {
+  '用静态拉伸法测金属丝的杨氏弹性模量': 'young',
+  '钨的逸出功测定': 'tungsten',
+  '光电效应的研究': 'photo'
+};
+var BRIDGE_EXPS = [];                    /* /health 返回的「已接入」实验，优先于上面的手写映射 */
+function eidForExp(name) {
+  var hit = (BRIDGE_EXPS || []).filter(function (e) { return e.name === name; })[0];
+  return hit ? hit.id : (EXPID[name] || null);
+}
+function supportedNames() {
+  return (BRIDGE_EXPS || []).map(function (e) { return e.name; }).join('、') || '（识别桥没启动）';
+}
+function setRec(text, kind) {
+  var el = $('rec-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = (kind === 'bad') ? 'var(--bad)' : (kind === 'ok' ? 'var(--ok)' : 'var(--muted)');
+}
+function probeBridge() {
+  setRec('正在连本地识别桥…', 'wait');
+  fetch(BRIDGE + '/health').then(function (r) { return r.json(); }).then(function (j) {
+    BRIDGE_OK = true;
+    BRIDGE_EXPS = j.experiments || [];
+    setRec('识别桥已连接 · ' + (j.mode === 'mock' ? '桩模式（不联网）' : '真实模式 · ' + j.model) +
+      ' · 已接入 ' + BRIDGE_EXPS.length + ' 个实验' +
+      (j.has_key ? '' : ' · 密钥由页面提供'), 'ok');
+  }).catch(function () {
+    BRIDGE_OK = false;
+    setRec('识别桥没启动：在 07_流水线 里运行 python bridge.py --mock，或先「用示例数据体验」', 'bad');
+  });
+}
+function readB64(file, cb) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var s = String(fr.result);
+    cb(s.slice(s.indexOf(',') + 1), file.type || 'image/jpeg');
+  };
+  fr.onerror = function () { cb(null, null); };
+  fr.readAsDataURL(file);
+}
+function previewRec(j) {
+  var t1 = j.tables && j.tables.t1 && j.tables.t1.cells;
+  if (!t1 || !t1.length) return '';
+  var head = t1.slice(0, 3).map(function (row) {
+    return '<tr>' + row.slice(0, 6).map(function (v) { return '<td>' + (v === null ? '?' : v) + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  return '<table class="mini"><tbody>' + head + '</tbody></table>' +
+    '<div class="fine">预览表 1 前 3 行（共 ' + t1.length + ' 行 × ' + t1[0].length + ' 列）</div>';
+}
+function showMismatch(j) {
+  STATE.pendingExp = j.suggest;
+  STATE.pendingName = j.suggest_name || j.detected;
+  var mm = $('mm');
+  mm.style.display = 'block';
+  mm.innerHTML = '<b>这张照片不是你现在选的实验。</b><br>照片上印的是《' + esc(j.detected) +
+    '》，你选的是《' + esc(STATE.exp) + '》。' +
+    '<div style="margin-top:10px"><button class="btn pri sm" onclick="switchExp()">切成《' +
+    esc(STATE.pendingName) + '》再认一次</button></div>';
+  setRec('实验对不上：照片是《' + esc(j.detected) + '》', 'bad');
+}
+
+function switchExp() {
+  if (!STATE.pendingExp) return;
+  STATE.exp = STATE.pendingName;
+  STATE.expId = STATE.pendingExp;
+  var sel = $('exp-sel');
+  if (sel) { sel.value = STATE.pendingName; }
+  $('mm').style.display = 'none';
+  STATE.pendingExp = null;
+  if (!STATE.lastFile) { go('s-upload'); return; }
+  toast('已切成《' + STATE.exp + '》，正在重新认这张照片…');
+  identify(STATE.lastFile, function (ok, j) { if (ok) go('s-review'); });
+}
+
+function setExp(name, id) {
+  STATE.exp = name;
+  if (id) STATE.expId = id;
+  var box = $('exp-detect');
+  if (box) box.textContent = name;
+  var sel = $('exp-sel');
+  if (sel) { sel.value = name; }
+}
+
+/* 第一步：看照片是哪个实验；认出来就直接往下认数字 */
+function detectThenRecognize(file, cb) {
+  STATE.lastFile = file;
+  var eid0 = eidForExp(STATE.exp);
+  setStatus('正在看这是哪个实验…');
+  readB64(file, function (b64, mime) {
+    if (!b64) { setStatus('读不出这张图，换一张试试。', true); return cb(false); }
+    var payload = {
+      image_b64: b64, mime: mime,
+      api_key: (STATE.api && STATE.api.key) || '',
+      base_url: (STATE.api && STATE.api.url) || '',
+      model: (STATE.api && STATE.api.model) || ''
+    };
+    if (STATE.mockRec) payload.mode = 'mock';
+    fetch(BRIDGE + '/detect', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.image) STATE.detImg = j.image;
+      if (j && j.ok && j.exp_id) {
+        setExp(j.name, j.exp_id);
+        showExpEdit(false);
+        setStatus('认出来了：《' + j.name + '》，接着认数字…');
+        identify(file, cb);
+        return;
+      }
+      /* 认不出：把选择框亮出来，让用户自己选 */
+      showExpEdit(true);
+      var box = $('exp-detect');
+      if (box) box.textContent = '认不出这是哪个实验' + (j && j.detected ? '（照片上像「' + j.detected + '」）' : '');
+      setStatus('认不出是哪个实验，请在下面手动选一个，选完我会接着认数字。', true);
+      cb(false);
+    }).catch(function () {
+      showExpEdit(true);
+      setStatus('识别桥没在跑（启动.ps1），或者网络断了。', true);
+      cb(false);
+    });
+  });
+}
+
+function showExpEdit(open) {
+  var sel = $('exp-sel'), btn = $('exp-edit');
+  if (sel) sel.style.display = open ? 'block' : 'none';
+  if (btn) btn.textContent = open ? '收起' : '认不出？手动选';
+}
+
+function onExpPicked(name) {
+  setExp(name, null);
+  showExpEdit(false);
+  if (!STATE.lastFile) { toast('已选《' + name + '》，现在传照片'); return; }
+  toast('已选《' + name + '》，正在认这张照片的数字…');
+  identify(STATE.lastFile, function (ok) {
+    var up = $('up-data');
+    if (up) up.classList[ok ? 'add' : 'remove']('done');
+    STATE.files.data = !!ok;
+    syncGen();
+    if (ok) go('s-review');
+  });
+}
+
+function setStatus(text, bad) {
+  var el = $('rec-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = bad ? 'var(--bad)' : '';
+}
+
+function usageLine(u) {
+  if (!u || (!u.total_tokens && !u.prompt_tokens)) return '';
+  var inTok = u.prompt_tokens || 0, outTok = u.completion_tokens || 0;
+  var tot = u.total_tokens || (inTok + outTok);
+  return '用量：输入 ' + inTok + ' + 输出 ' + outTok + ' = ' + tot + ' tokens';
+}
+
+function identify(file, cb) {
+  STATE.lastFile = file;
+  var eid = eidForExp(STATE.exp);
+  if (!eid) {
+    setRec('识别桥还不支持「' + STATE.exp + '」。已接入：' + supportedNames() +
+      '。换一个实验，或先点「没有密钥？用示例数据体验」把流程走一遍。', 'bad');
+    return cb(false);
+  }
+  readB64(file, function (b64, mime) {
+    if (!b64) { setRec('读不出这张图，换一张试试。', 'bad'); return cb(false); }
+    setRec(STATE.mockRec ? '正在用桩数据识别（不联网、不花钱）…' : '正在识别照片（约 5–15 秒）…', 'wait');
+    var payload = {
+      exp_id: eid, image_b64: b64, mime: mime,
+      api_key: (STATE.api && STATE.api.key) || '',
+      base_url: (STATE.api && STATE.api.url) || '',
+      model: (STATE.api && STATE.api.model) || ''
+    };
+    if (STATE.mockRec) payload.mode = 'mock';
+    fetch(BRIDGE + '/recognize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.mismatch) { showMismatch(j); return cb(false); }
+      if (j.error) {
+        var msg = String(j.error).replace(/^识别失败：/, '');
+        var dg = j.diag || {};
+        if (dg.finish_reason) msg += '（finish_reason=' + dg.finish_reason +
+          '，正文 ' + (dg.len_content || 0) + ' 字，思考 ' + (dg.len_reasoning || 0) + ' 字）';
+        if (j.first_error) msg += '｜第一次：' + String(j.first_error).slice(0, 120);
+        var ul = usageLine((dg && dg.usage) || (j.diag && j.diag.usage));
+        if (ul) msg += '｜' + ul + '（这次也花了钱）';
+        setRec('识别失败：' + msg, 'bad');
+        return cb(false);
+      }
+      STATE.rec = j;
+      var box = $('rec-preview');
+      if (box) box.innerHTML = previewRec(j);
+      var notes = (j.notes || []).length;
+      var uline = usageLine(j.meta && j.meta.usage);
+      setRec('识别完成' + (notes ? '，' + notes + ' 处要人工确认' : '，没有发现歧义') +
+        ' · 结果会先进核对屏' + (uline ? '（' + uline + '）' : ''), 'ok');
+      STATE.lastUsage = uline;
+      saveDraft();
+      cb(true, j);
+    }).catch(function (e) { setRec('请求出错：' + e.message + '（识别桥在跑吗？）', 'bad'); cb(false); });
+  });
+}
+
+function pick(input, upId, fnId) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  $(fnId).textContent = f.name;
+  if (upId === 'up-data') {
+    /* 数据页：先看是哪个实验，再认数字；两步都过了才算上传成功 */
+    detectThenRecognize(f, function (ok) {
+      $(upId).classList[ok ? 'add' : 'remove']('done');
+      STATE.files.data = !!ok;
+      syncGen();
+    });
+    return;
+  }
+  $(upId).classList.add('done');
+  if (upId === 'up-hw') { STATE.files.hw = true; readStyle(f); }
+  if (upId === 'up-shot') { STATE.files.shot = true; readShot(f); }
+  syncGen();
+}
+
+/* 作业文件：真读进去，抽一张「他/她怎么写」的风格卡 */
+function readStyle(f) {
+  var tip = $('hw-tip');
+  if (tip) { tip.className = 'hint'; tip.textContent = '正在读这份作业的习惯…'; }
+  var fr = new FileReader();
+  fr.onload = function () {
+    var b64 = String(fr.result).split(',')[1] || '';
+    fetch(BRIDGE + '/style', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ docx_b64: b64 })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.ok) {
+        STATE.style = j;
+        if (tip) {
+          tip.className = 'hint ok';
+          tip.innerHTML = '<b>读到了：</b>' + esc(j.summary) +
+            '<br><span class="sub">出报告时会按这个习惯写（不会抄他原文，连续 12 字以上一律不复制）</span>';
+        }
+        toast('风格卡已生成：' + (j.stats || {}).chars + ' 字、' + (j.stats || {}).paras + ' 段');
+        saveDraft();
+      } else {
+        if (tip) { tip.className = 'hint bad'; tip.textContent = '读不动这份作业：' + ((j && j.error) || '未知原因'); }
+      }
+    }).catch(function () {
+      if (tip) { tip.className = 'hint bad'; tip.textContent = '识别桥没在跑，作业读不了（先运行 启动.ps1）'; }
+    });
+  };
+  fr.readAsDataURL(f);
+}
+
+/* 学习通截图：读成 base64 存着，出报告时贴进最后一页的粘贴框 */
+function readShot(f) {
+  var tip = $('shot-tip');
+  if (tip) { tip.className = 'hint'; tip.textContent = '正在读截图…'; }
+  var fr = new FileReader();
+  fr.onload = function () {
+    STATE.shotB64 = String(fr.result);
+    if (tip) {
+      tip.className = 'hint ok';
+      tip.textContent = '截图已就位，会贴进报告最后一页（' + Math.round(f.size / 1024) + ' KB）';
+    }
+  };
+  fr.readAsDataURL(f);
+}
+function toggleFmt(btn) {
+  var f = btn.getAttribute('data-f');
+  STATE.fmt[f] = !STATE.fmt[f];
+  if (STATE.fmt[f]) btn.classList.add('on'); else btn.classList.remove('on');
+  if (!STATE.fmt.pdf && !STATE.fmt.docx && !STATE.fmt.json && !STATE.fmt.png) {
+    STATE.fmt.pdf = true; document.querySelector('[data-f=pdf]').classList.add('on');
+    toast('至少留一个格式，已帮你勾回 PDF');
+  }
+}
+function syncGen() {
+  if (STATE.demo) {
+    $('btn-gen').disabled = false;
+    $('gen-hint').textContent = '';
+    return;
+  }
+  var need = [];
+  if (!STATE.files.data) need.push('原始数据页');
+  if (!STATE.files.hw) need.push('以前的作业');
+  var ok = need.length === 0;
+  $('btn-gen').disabled = !ok;
+  $('gen-hint').textContent = ok ? '' : ('还差：' + need.join('、'));
+}
+function startGen() {
+  if (!STATE.demo && !(STATE.files.data && STATE.files.hw)) {
+    syncGen();
+    toast('先把必填的两项传上来（或用示例数据体验）');
+    return;
+  }
+  if (!STATE.demo && !(STATE.rec && STATE.rec.tables)) {
+    toast('还没认到数字：先传一张原始数据页，或在核对屏点「换一张照片」');
+    return;
+  }
+  go('s-review');
+}
+function fmtList() {
+  var names = { pdf: 'PDF', docx: 'Word', json: 'JSON', png: 'PNG' }, out = [];
+  for (var k in STATE.fmt) if (STATE.fmt[k]) out.push(names[k]);
+  return out.join(' + ');
+}
+
+/* ---------- 计算（真算） ---------- */
+var DATA = {
+  up:   [10.00, 12.79, 15.57, 18.36, 21.13, 23.92, 26.70, 29.48],
+  down: [10.03, 12.82, 15.60, 18.39, 21.17, 23.95, 26.73, 29.51],
+  dia:  [0.298, 0.301, 0.299, 0.302, 0.300, 0.301]
+};
+var CONST = { K: 0.0750, D: 1.5000, L: 1.0000, g: 9.794, zero: 0.002, m4: 4.0 };
+
+function avg(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+
+function compute() {
+  var mean = [], i;
+  for (i = 0; i < 8; i++) mean.push((DATA.up[i] + DATA.down[i]) / 2);
+  var N = [];
+  for (i = 0; i < 4; i++) N.push(mean[i + 4] - mean[i]);
+  var Nbar = avg(N), S = 0;
+  for (i = 0; i < 4; i++) S += Math.pow(N[i] - Nbar, 2);
+  S = Math.sqrt(S / 3);
+  var Sbar = S / 2;
+  var dbar = avg(DATA.dia), d = dbar - CONST.zero;
+  var F = CONST.m4 * CONST.g;
+  var Y = 8 * F * CONST.L * CONST.D / (Math.PI * Math.pow(d / 1000, 2) * CONST.K * (Nbar / 100));
+  /* 直径的不确定度：仪器 0.004 mm 与 6 次读数的 A 类合成（与引擎同式） */
+  var Sd = 0, i2;
+  for (i2 = 0; i2 < DATA.dia.length; i2++) Sd += Math.pow(DATA.dia[i2] - dbar, 2);
+  Sd = Math.sqrt(Sd / (DATA.dia.length - 1));
+  var u_d = Math.sqrt(Math.pow(0.004, 2) + Math.pow(Sd / Math.sqrt(DATA.dia.length), 2));
+  var ur = [
+    2 * u_d / d * 100,
+    0.0005 / CONST.K * 100,
+    0.002 / CONST.D * 100,
+    0.0005 / CONST.L * 100,
+    0.5,
+    Sbar / Nbar * 100
+  ];
+  var q = 0;
+  for (i = 0; i < ur.length; i++) q += ur[i] * ur[i];
+  var rel = Math.sqrt(q);
+  return { mean: mean, N: N, Nbar: Nbar, S: S, Sbar: Sbar, dbar: dbar, d: d, F: F, Y: Y, rel: rel, uY: Y * rel / 100 };
+}
+
+/* ---------- S5 核对 ---------- */
+var ISSUES = [
+  {
+    id: 'x1', level: 'warn', text: '表 1 第 0 行：增重 10.00、减重 10.03，两次差 0.03，属正常迟滞；已按平均值参与逐差。', btn: '知道了'
+  },
+  {
+    id: 'x2', level: 'warn', text: '千分尺零点读数 0.002 mm 已记下，直径会先减零点再平方，别忘这一步。', btn: '知道了'
+  }
+];
+
+function buildReview() {
+  if (STATE.rec && STATE.rec.tables) { buildReviewFromRec(); return; }
+  var r = compute(), body = $('t-review-body');
+  var html = '', i;
+  for (i = 0; i < 8; i++) {
+    html += '<tr>' +
+      '<td>' + i + '</td>' +
+      '<td class="num">' + (2 + i).toFixed(3) + '</td>' +
+      '<td><input data-i="' + i + '" data-k="up" value="' + DATA.up[i].toFixed(2) + '"></td>' +
+      '<td><input data-i="' + i + '" data-k="down" value="' + DATA.down[i].toFixed(2) + '"></td>' +
+      '<td class="num">' + r.mean[i].toFixed(3) + '</td>' +
+      '<td class="num">' + (i < 4 ? r.N[i].toFixed(3) : '') + '</td>' +
+      '</tr>';
+  }
+  body.innerHTML = html;
+  var inputs = body.querySelectorAll('input');
+  for (i = 0; i < inputs.length; i++) {
+    inputs[i].onchange = function () {
+      var idx = +this.getAttribute('data-i'), key = this.getAttribute('data-k');
+      var v = parseFloat(this.value);
+      if (isNaN(v)) { toast('请输入数字'); return; }
+      DATA[key][idx] = v;
+      this.parentNode.classList.add('changed');
+      var rr = compute();
+      var rows = body.querySelectorAll('tr');
+      for (var j = 0; j < 8; j++) {
+        rows[j].children[4].textContent = rr.mean[j].toFixed(3);
+        rows[j].children[5].textContent = (j < 4 ? rr.N[j].toFixed(3) : '');
+      }
+      var d = rr.Nbar - avg(rr.N);
+      $('conflict').innerHTML = '';
+      document.querySelectorAll('#chat .msg.bot').forEach(function (m) {});
+    };
+  }
+  // 旧气泡墙已改成「表格下方选择题」，这里不再需要
+}
+
+
+
+/* ---------- S5 用真实识别结果核对 ---------- */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+  });
+}
+
+function recTableHtml(tb, tid) {
+  var rows = (tb && tb.cells) || [], h = '', ri, ci, r, c;
+  if (!rows.length) return '';
+  h = '<div class="tablewrap" style="margin-bottom:10px"><table class="grid" data-t="' + tid + '">';
+  for (ri = 0; ri < rows.length; ri++) {
+    r = rows[ri];
+    h += '<tr>';
+    for (ci = 0; ci < r.length; ci++) {
+      c = esc(r[ci]);
+      h += (ri === 0 ? '<th>' + c + '</th>'
+        : '<td class="num" data-t="' + tid + '" data-r="' + ri + '" data-c="' + ci + '">' + c + '</td>');
+    }
+    h += '</tr>';
+  }
+  return h + '</table></div>';
+}
+
+function buildReviewFromRec() {
+  var rec = STATE.rec, i;
+  $('t-review-wrap').style.display = 'none';
+  $('rec-wrap').style.display = 'block';
+  renderRecTables();
+
+  var img = (rec.meta && rec.meta.image) || {};
+  var note = $('rec-note');
+  note.style.display = 'block';
+  note.textContent = (img.converted_from === 'heic' ? '照片已自动转码 HEIC → JPEG：' : '已识别：') +
+    (img.out_size || []).join('×') + '，' + (img.out_kb || '?') + ' KB（原始 ' +
+    (img.in_kb || '?') + ' KB）';
+
+  buildQuiz();
+}
+
+function renderRecTables() {
+  var rec = STATE.rec, html = '';
+  ['t1', 't2', 't3'].forEach(function (k) {
+    if (rec.tables[k]) html += recTableHtml(rec.tables[k], k);
+  });
+  $('rec-wrap').innerHTML = html || ('<div class="empty">这张照片里没认出表格。<br>建议只拍表格那一片、正对着拍、别反光；也可能是拍错了实验。' +
+    '<div style="margin-top:10px"><button class="btn" onclick="go(\'s-upload\')">换一张照片</button></div></div>');
+}
+
+/* ---------- 出题：每个疑点一道，选项横向排，一次只显示一道 ---------- */
+var QUIZ = { list: [], i: 0, done: {} };
+
+function buildQuiz() {
+  var notes = (STATE.rec && STATE.rec.notes) || [];
+  QUIZ = { list: notes.slice(0), i: 0, done: {} };
+  var box = $('quiz');
+  if (!QUIZ.list.length) {
+    box.style.display = 'none';
+    $('btn-ok').disabled = false;
+    $('ok-hint').textContent = '识别没有发现疑点，可以直接生成。';
+    return;
+  }
+  box.style.display = 'block';
+  QUIZ.i = 0;
+  $('btn-ok').disabled = true;
+  $('ok-hint').textContent = '还有 ' + QUIZ.list.length + ' 题等你选。';
+  renderQ();
+}
+
+function qTarget(q) {
+  return (q.table && q.row >= 0 && q.col >= 0) ? { t: q.table, r: q.row, c: q.col } : null;
+}
+
+function qValueAt(q) {
+  var tg = qTarget(q);
+  if (!tg) return '';
+  var cells = (STATE.rec.tables[tg.t] || {}).cells || [];
+  return (cells[tg.r] && cells[tg.r][tg.c] != null) ? String(cells[tg.r][tg.c]) : '';
+}
+
+function renderQ() {
+  var q = QUIZ.list[QUIZ.i], n = QUIZ.list.length;
+  if (!q) return;
+  $('q-idx').textContent = QUIZ.i + 1;
+  $('q-total').textContent = n;
+  $('q-loc').textContent = q.where || '（这一格）';
+
+  var cur = qValueAt(q) || q.current || '';
+  var why = q.why ? ('模型说：' + q.why + '。') : '';
+  $('q-why').textContent = why + '它现在填的是 ' + (cur === '' ? '（空）' : cur) +
+    (q.candidates && q.candidates.length > 1 ? '，下面这些是它拿不准的可能值。' : '。');
+
+  var opts = (q.candidates || []).slice(0);
+  if (cur && opts.indexOf(cur) < 0) opts.unshift(cur);
+  if (!opts.length) opts.push(cur || '');
+  var h = '';
+  for (var k = 0; k < opts.length; k++) {
+    var v = opts[k];
+    h += '<button type="button" class="qopt' + (v === cur ? ' cur' : '') +
+      '" onclick="qPick(\'' + esc(String(v)).replace(/'/g, "\\'") + '\')"><b>' + esc(v) + '</b>' +
+      (v === cur ? '<span style="font-size:11px;opacity:.7">模型填的</span>' : '') + '</button>';
+  }
+  h += '<button type="button" class="qopt" onclick="qManual()">都不是，我自己填…</button>';
+  $('q-opts').innerHTML = h;
+  $('q-tip').textContent = '选一个就会写进表里第 ' + (QUIZ.i + 1) + '/' + n + ' 题；也可以直接改表里的格子。';
+  hlCell(q);
+}
+
+function hlCell(q) {
+  var all = document.querySelectorAll('#rec-wrap td.hl');
+  for (var k = 0; k < all.length; k++) all[k].classList.remove('hl');
+  var tg = qTarget(q);
+  if (!tg) return;
+  var sel = '#rec-wrap td[data-t="' + tg.t + '"][data-r="' + tg.r + '"][data-c="' + tg.c + '"]';
+  var td = document.querySelector(sel);
+  if (td) td.classList.add('hl');
+}
+
+function qPick(v) {
+  var q = QUIZ.list[QUIZ.i];
+  var tg = qTarget(q);
+  if (tg) {
+    var tb = STATE.rec.tables[tg.t] || {};
+    if (!tb.cells) tb.cells = [];
+    if (!tb.cells[tg.r]) tb.cells[tg.r] = [];
+    tb.cells[tg.r][tg.c] = v;
+    renderRecTables();
+    saveDraft();
+  }
+  QUIZ.done[q.id] = v;
+  qNext();
+}
+
+function qManual() {
+  var q = QUIZ.list[QUIZ.i];
+  var tg = qTarget(q);
+  if (!tg) { toast('这一题模型没给准位置，直接去表里找到那格改吧'); return; }
+  var old = qValueAt(q);
+  var v = window.prompt('这一格应该是多少？（' + (q.where || '') + '）', old);
+  if (v === null) return;
+  v = String(v).trim();
+  if (!v) return;
+  qPick(v);
+}
+
+function qSkip() {
+  var q = QUIZ.list[QUIZ.i];
+  QUIZ.done[q.id] = null;
+  qNext();
+}
+
+function qNext() {
+  var n = QUIZ.list.length;
+  for (var k = 1; k <= n; k++) {
+    var idx = (QUIZ.i + k) % n;
+    if (!(QUIZ.list[idx].id in QUIZ.done)) { QUIZ.i = idx; renderQ(); updateQuizState(); return; }
+  }
+  updateQuizState();
+}
+
+function updateQuizState() {
+  var n = QUIZ.list.length, left = 0, k;
+  for (k = 0; k < n; k++) if (!(QUIZ.list[k].id in QUIZ.done)) left++;
+  var box = $('quiz');
+  if (left === 0) {
+    box.style.display = 'none';
+    $('btn-ok').disabled = false;
+    $('ok-hint').textContent = '题目都过完了（共 ' + n + ' 题），可以生成报告。';
+  } else {
+    box.style.display = 'block';
+    $('btn-ok').disabled = true;
+    $('ok-hint').textContent = '还有 ' + left + ' 题等你选。';
+  }
+}
+
+/* ---------- S6 生成（真调识别桥出 docx） ---------- */
+function renderReport() {
+  var eid = eidForExp(STATE.exp);
+  $('gen-step').textContent = '正在排版生成 docx…';
+  var prov = ((STATE.rec.meta || {}).mode === 'mock') ? { source: 'mock' } : { source: 'photo' };
+  var body = { exp_id: eid, tables: STATE.rec.tables, provenance: prov };
+  if (STATE.shotB64) {
+    body.shot_b64 = String(STATE.shotB64).split(',')[1] || '';
+    body.shot_mime = /^data:([^;]+)/.test(STATE.shotB64) ? RegExp.$1 : 'image/jpeg';
+  }
+  fetch(BRIDGE + '/render', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function (r) { return r.json(); }).then(function (j) {
+    if (j && j.ok) {
+      STATE.out = j;
+      toast('报告已生成：' + j.name);
+    } else {
+      STATE.out = null;
+      STATE.outErr = (j && j.error) || '不知道原因';
+      toast('生成失败：' + STATE.outErr);
+    }
+    go('s-result');
+  }).catch(function () {
+    STATE.out = null;
+    STATE.outErr = '识别桥没在跑（生成服务连不上），先运行「启动.ps1」。';
+    toast(STATE.outErr);
+    go('s-result');
+  });
+}
+
+/* ---------- S6 生成 ---------- */
+var GEN_TIMER = null;
+function runGen() {
+  var bar = $('gen-bar'), step = $('gen-step'), p = 0;
+  var stages = ['识别原始数据页…', '重建表格并逐格核对…', '按公式计算与不确定度合成…', '套用学校模板排版…', '渲染 PDF / Word…'];
+  $('btn-ok').disabled = true;
+  if (GEN_TIMER) clearInterval(GEN_TIMER);
+  GEN_TIMER = setInterval(function () {
+    p += 4;
+    if (p > 100) p = 100;
+    bar.style.width = p + '%';
+    var s = Math.min(stages.length - 1, Math.floor(p / 20));
+    step.textContent = stages[s] + '  ' + p + '%';
+    if (p >= 100) {
+      clearInterval(GEN_TIMER);
+      if (STATE.rec && STATE.rec.tables && BRIDGE_OK) {
+        renderReport();
+      } else {
+        setTimeout(function () { go('s-result'); }, 450);
+      }
+    }
+  }, 90);
+}
+
+/* ---------- S7 结果 ---------- */
+function kpiText(spec, o) {
+  if (!spec || !o) return '—';
+  var v = o[spec.key];
+  if (v === undefined || v === null || isNaN(v)) return '—';
+  var x = v * (spec.scale || 1);
+  var d = (spec.digits === undefined) ? 3 : spec.digits;
+  var sign = (x < 0) ? '−' : (spec.signed ? '+' : '');
+  return sign + Math.abs(x).toFixed(d) + (spec.suffix || '');
+}
+
+function fillKpi(o) {
+  var ks = document.querySelectorAll('#s-result .kpi .k');
+  var vs = document.querySelectorAll('#s-result .kpi .v');
+  var spec = (STATE.out && STATE.out.kpi) || [];
+  for (var i = 0; i < vs.length; i++) {
+    if (spec[i] && o) {
+      vs[i].textContent = kpiText(spec[i], o);
+      if (ks[i]) ks[i].textContent = spec[i].label;
+    } else {
+      vs[i].textContent = '—';
+      if (ks[i]) ks[i].textContent = ['主结果', '与公认值的相对误差', '不确定度'][i] || '';
+    }
+  }
+}
+
+function fillResult() {
+  var ubox = document.getElementById('res-usage');
+  var dl = $('btn-dl');
+  if (STATE.out && STATE.out.result) {
+    fillKpi(STATE.out.result);
+    dl.textContent = '下载 ' + STATE.out.name + '（' + Math.round(STATE.out.bytes / 1024) + ' KB）';
+    dl.onclick = function () { window.location.href = BRIDGE + STATE.out.url; };
+  } else {
+    var err = STATE.outErr || '这次没有生成成功。';
+    fillKpi(null);
+    $('res-h').textContent = '没有生成成功';
+    var box = $('res-err');
+    if (box) {
+      box.style.display = 'block';
+      box.innerHTML = '<b>原因：</b>' + esc(err) +
+        '<div class="hint" style="margin-top:6px">最常见的就是这张照片没认出数字（拍虚、反光、只拍到一部分），' +
+        '或者选的实验和照片不是同一个。</div>' +
+        '<div style="margin-top:10px"><button class="btn pri sm" onclick="go(\'s-review\')">回去核对数字</button> ' +
+        '<button class="btn sm" onclick="go(\'s-upload\')">换一张照片</button></div>';
+    }
+    dl.textContent = '报告还没生成';
+    dl.onclick = function () { toast('先回去把数据弄对，再生成一次'); };
+  }
+  $('res-sub').textContent = STATE.exp + ' · ' + new Date().toISOString().slice(0, 10) +
+    ' · ' + fmtList() + (STATE.regenerated ? ' · 第 ' + (STATE.regenerated + 1) + ' 版' : '') +
+    (STATE.demo ? ' · 示例数据（不能直接提交）' : '');
+}
+
+/* ---------- S8 重新生成 ---------- */
+function regen() {
+  STATE.regenerated++;
+  toast('已记录原因，进入重新生成');
+  go('s-gen');
+}
+
+/* ---------- S9 清理 ---------- */
+function cleanCk() {
+  var ok = $('c1').checked && $('c2').checked && $('c3').checked;
+  $('btn-clean').disabled = !ok;
+}
+function doneClean() {
+  STATE.api = { url: '', model: '', key: '', tested: false };
+  $('api-key').value = '';
+  $('api-url').value = 'https://api.deepseek.com/v1';
+  $('api-model').value = 'deepseek-v4-flash-vision-exp';
+  $('api-msg').innerHTML = '';
+  $('api-status').textContent = '未测试';
+  $('api-next').disabled = true;
+  toast('已清除本地密钥，回到首页');
+  setTimeout(function () { go('s-home'); }, 700);
+}
+
+/* ---------- toast ---------- */
+var toastTimer = null;
+function toast(msg) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2600);
+}
+
+/* ---------- 启动 ---------- */
+(function boot() {
+  /* 公告每次打开都出现：不再按 localStorage 跳过 */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('notice').classList.contains('hide')) acceptNotice();
+  });
+  syncGen();
+  if (loadDraft()) {
+    restoreBanner();
+    if ($('next-from-api')) { /* 不影响 API 屏 */ }
+    syncGen();
+  }
+  if (FLAGS.official) {
+    $('official-tag').textContent = '可用';
+    $('official-tag').classList.remove('gray');
+    $('card-official').classList.remove('off');
+  }
+})();
+</script>
+</body>
+</html>

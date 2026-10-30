@@ -1,0 +1,6 @@
+JSON  : C:\Users\lidey\Desktop\实验报告制作沙盒\04_生成过程_脚本图表\data_tungsten.json
+REPORT: C:\Users\lidey\Desktop\实验报告制作沙盒\04_生成过程_脚本图表\read_report.txt
+FIG   : C:\Users\lidey\Desktop\实验报告制作沙盒\04_生成过程_脚本图表\figures_tungsten\fig_w1.png  1725x1100
+FIG   : C:\Users\lidey\Desktop\实验报告制作沙盒\04_生成过程_脚本图表\figures_tungsten\fig_w2.png  1725x1100
+FIG   : C:\Users\lidey\Desktop\实验报告制作沙盒\04_生成过程_脚本图表\figures_tungsten\fig_w3.png  1725x1100
+m_plot=-22.095238  b=12.509643  r2=0.99615619  phi=4.3854 eV  rel=-3.404%

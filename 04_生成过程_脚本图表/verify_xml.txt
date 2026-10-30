@@ -1,0 +1,13 @@
+tbl0 tblPr: ['tblW', 'jc', 'tblLayout', 'tblLook']
+   tblLayout count=1  jc=center
+   dup=[]
+tbl1 tblPr: ['tblW', 'jc', 'tblLayout', 'tblLook']
+   tblLayout count=1  jc=center
+   dup=[]
+tbl2 tblPr: ['tblW', 'jc', 'tblLayout', 'tblLook']
+   tblLayout count=1  jc=center
+   dup=[]
+tbl3 tblPr: ['tblW', 'jc', 'tblLayout', 'tblLook']
+   tblLayout count=1  jc=center
+   dup=[]
+body children tail: ['p', 'p', 'tbl', 'sectPr']

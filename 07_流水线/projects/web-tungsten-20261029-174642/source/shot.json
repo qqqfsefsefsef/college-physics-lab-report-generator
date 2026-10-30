@@ -1,0 +1,15 @@
+{
+ "in_mime": "image/jpeg",
+ "in_kb": 487.3,
+ "in_size": [
+  1440,
+  3200
+ ],
+ "resized": true,
+ "out_mime": "image/jpeg",
+ "out_size": [
+  720,
+  1600
+ ],
+ "out_kb": 113.6
+}

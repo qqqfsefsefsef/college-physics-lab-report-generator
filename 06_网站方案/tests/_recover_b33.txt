@@ -1,0 +1,130 @@
+[assistant]
+Two bugs reported:
+
+1. **"生成报告那一栏卡住不跳转"** — clicking 生成报告 doesn't advance. Why? `startGen()` is called by the button: `onclick="startGen()"` — but I defined `runGen()`, not `startGen()`! Let me check: in the S4 card, `<button class="btn pri" id="btn-gen" disabled onclick="startGen()">生成报告</button>`. And the JS has `function runGen()` (called by go('s-gen')). There's no `startGen` → ReferenceError → nothing happens. That's the bug. ✓ Confirmed by my own code.
+
+2. **"每次点测试连接都要反应，不是只反映一次"** — meaning: every click re-runs the test; and worse, users who haven't entered an API key click it and it blocks progression ("会导致无法跳转"). Their complaint: the test-connection button shouldn't gate the flow repeatedly; users without keys can't move forward.
+
+Wait — re-read: "我每次点测试连接都要反应，不是只反映一次，有些用户没写api就会去点那个按钮，会导致无法跳转". Interpretation: The test button responds every time (rather than caching the result), and since some users won't fill an API key, they'll click it, get a failure, and then be stuck (next button stays disabled) — so they can't proceed.
+
+Fix approach:
+- Make 测试连接 idempotent/cached: if already tested with same inputs, don't re-run (show "已通过 · 12ms" instantly); disable the button while testing; allow retest only when inputs change (or via a "重新测试" affordance).
+- Don't let it be a hard gate: 下一步 stays disabled only if not tested... but the user says users without key click and get stuck → so we need an escape hatch. Options:
+  (a) Allow "先跳过，生成时再校验" — but generation needs a key.
+  (b) Better: the *input* itself should be validated inline (key length, url format) so the button isn't the only feedback; and give the "下一步" a graceful path: if not tested, clicking 下一步 shows an inline hint + focuses the first empty field, rather than doing nothing.
+  (c) Also: 有些用户没写 api — for the official channel there's no key. Also a demo mode ("先看看能生成什么" 免密钥预览) could unblock. Since 官方通道未开放, a BYOK-only gate blocks everyone in test.
+
+My plan:
+1. Fix `startGen` → define a real `startGen()` that validates and goes to review (or s-gen). Implement: `function startGen(){ go('s-review'); }` — flow: 生成 → 核对(S5) → 确认 → 生成中(S6) → 结果. Yes, the button says 生成报告, and the flow should go to 核对 first. Currently the button was meant to go to S5. So `startGen(){ go('s-review'); }`.
+2. Reorder screens: ensure S5 → S6 → S7 chain works: `btn-ok` onclick="go('s-gen')" ✓, runGen → go('s-result') ✓.
+3. Cache test result: store a `signature` of url|model|key; if unchanged and already passed → button shows "已通过" and clicking only shows nothing (or re-shows message without network). Add disabled state during testing (prevent double clicks).
+4. Ungate 下一步: always enabled; on click, if !tested → run test automatically (auto-verify) and if it fails, show error and stay; OR allow to continue but mark "未验证" with a warning? 
+
+Given the user's complaint is "users without api click and can't proceed", the right product behavior: **不把"测试连接"当闸门**。Let 下一步 always be clickable; if key missing, show a clear inline error + focus the field, and additionally offer "没有密钥？用示例数据体验一下" (demo path) so the flow isn't a dead end.
+
+I'll implement:
+- 下一步 always enabled.
+- On click: if no url/model/key → inline error "先填三项…" + focus + also show a secondary button "用示例数据体验（不需要密钥）" that sets a demo flag and goes to upload.
+- If fields filled but not tested → auto-run test then proceed on success.
+- Test result cached by signature; button disabled while running; text reflects state ("已通过 · 12ms").
+- Demo mode: STATE.demo = true; upload screen shows a banner "示例模式：将使用内置示例数据（不会上传照片）"; cost line shows "示例模式不计费"; generation works.
+
+Also fix: after demo, result KPIs still come from compute() ✓.
+
+Additionally the S5 核对: after a change, "确认" button gets disabled? Currently changing a cell sets `$('btn-ok').disabled` only in buildReview. Actually onchange rebuilds some cells but doesn't disable 确认; fine.
+
+Another latent bug: in `buildReview`, `document.querySelectorAll('#chat .msg.bot').forEach(...)` — querySelectorAll returns NodeList; forEach OK in modern browsers. Stub returns [] — fine. But inside the change handler I call `avg(rr.N)` – avg exists. And `var d = rr.Nbar - avg(rr.N);` unused. Harmless.
+
+Also there's a bug: inputs use `data-k="up"`/`down` and I update DATA[key][idx] ✓.
+
+Another: `$('gen-hint')` etc. fine.
+
+Also "startGen" missing → also `btn-gen` disabled until data+hw; if user uploads nothing, button stays disabled — that's intended, but the user's complaint about being stuck may partly be this (they clicked 生成 without uploading). With demo mode + clearer hint it's fine.
+
+Let me also double check `go('s-review')` builds table before compute — buildReview calls compute() which uses DATA ✓.
+
+One more: the value formatting `DATA.up[i].toFixed(2)` — when parsing user input like "10.0" fine.
+
+Let me now patch prototype_v2.html:
+1. Replace `onclick="startGen()"` with `onclick="startGen()"` and add function startGen().
+2. Rework API screen gating: 
+   - `<button class="btn pri" id="api-next" disabled ...>` → remove disabled, keep id.
+   - Add demo button in API card.
+   - testConn caching.
+3. Add demo banner in upload screen + cost text change.
+4. Add helper `updateApiState()`.
+
+Let me write the edits carefully with the edit tool.
+
+Edit 1: the API card block — replace the row with buttons and add demo.
+
+Current:
+```html
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn" onclick="testConn()">测试连接</button>
+        <span class="muted" id="api-status">未测试</span>
+      </div>
+      <div id="api-msg"></div>
+      <div class="divider"></div>
+      <button class="btn pri" id="api-next" disabled onclick="go('s-upload')">下一步：上传素材</button>
+      <span class="muted" style="margin-left:8px">测试通过后会解锁</span>
+```
+
+New:
+```html
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn" id="btn-test" onclick="testConn()">测试连接</button>
+        <span class="muted" id="api-status">未测试</span>
+      </div>
+      <div id="api-msg"></div>
+      <div class="divider"></div>
+      <div class="row" style="flex-wrap:wrap">
+        <button class="btn pri" id="api-next" onclick="nextFromApi()">下一步：上传素材</button>
+        <button class="btn ghost" onclick="useDemo()">没有密钥？用示例数据体验</button>
+      </div>
+      <div class="hint">不填密钥也能先走完流程看效果；真正出报告时才会调用你的额度。</div>
+```
+
+Edit 2: upload screen demo banner. Insert after `<p class="lead">` in s-upload:
+```html
+    <div class="okbox" id="demo-banner" style="display:none;margin-bottom:14px">示例模式：用内置的一组示例数据跑通流程，不需要上传照片、不消耗额度。<b>生成的报告会红字标注「示例数据」</b>，不能直接提交。</div>
+```
+
+Edit 3: JS — add functions & caching; replace testConn.
+
+New JS:
+```js
+var API_SIG = '';   /* 已通过的参数指纹，避免重复测试 */
+function apiSig(){ return [$('api-url').value.trim(), $('api-model').value.trim(), $('api-key').value.trim()].join('|'); }
+function nextFromApi(){
+  $('api-msg').innerHTML='';
+  var u=$('api-url').value.trim(), m=$('api-model').value.trim(), k=$('api-key').value.trim();
+  if(!u||!m||!k){ ... inline hint + focus first empty ... return; }
+  if(STATE.api.tested && apiSig()===API_SIG){ go('s-upload'); return; }
+  testConn(function(){ go('s-upload'); });   // 自动补测一次，通过才走
+}
+function testConn(after){...}
+```
+Simplify: testConn(cb) with 800ms; guard `if (TESTING) return;`.
+
+And `useDemo()`: sets STATE.demo=true, fills nothing, shows banner, `STATE.files={data:true,hw:true,shot:false}`, syncGen(), go('s-upload').
+
+In syncGen: if demo → all ok, hint '示例模式：直接生成'.
+
+In startGen(): if demo → go('s-review'); else if files missing → hint; else go('s-review').
+
+Also fillResult: if demo → sub text append ' · 示例数据'.
+
+Also the 下载 toasts: in demo, mention 红字标注示例数据.
+
+Let me now apply edits with several edit calls. Keep them precise.
+
+I need the current text exactly. Let me just do the edits with distinctive anchors.
+
+[assistant • edit]
+{"file_path":"C:\\Users\\lidey\\Desktop\\实验报告制作沙盒\\06_网站方案\\prototype_v2.html","new_string":"      <div class=\"divider\"></div>\n      <div class=\"row\">\n        <button class=\"btn\" id=\"btn-test\" onclick=\"testConn()\">测试连接</button>\n        <span class=\"muted\" id=\"api-status\">未测试</span>\n      </div>\n      <div id=\"api-msg\"></div>\n      <div class=\"divider\"></div>\n      <div class=\"row\" style=\"flex-wrap:wrap\">\n        <button class=\"btn pri\" id=\"api-next\" onclick=\"nextFromApi()\">下一步：上传素材</button>\n        <button class=\"btn ghost\" onclick=\"useDemo()\">没有密钥？用示例数据体验</button>\n      </div>\n      <div class=\"hint\">不填密钥也能先走完整个流程看效果；改动任何一项会重新校验。</div>","old_string":"      <div class=\"divider\"></div>\n      <div class=\"row\">\n        <button class=\"btn\" onclick=\"testConn()\">测试连接</button>\n        <span class=\"muted\" id=\"api-status\">未测试</span>\n      </div>\n      <div id=\"api-msg\"></div>\n      <div class=\"divider\"></div>\n      <button class=\"btn pri\" id=\"api-next\" disabled onclick=\"go('s-upload')\">下一步：上传素材</button>\n      <span class=\"muted\" style=\"margin-left:8px\">测试通过后会解锁</span>"}
+
+[tool • edit]
+The file C:\Users\lidey\Desktop\实验报告制作沙盒\06_网站方案\prototype_v2.html has been updated successfully.

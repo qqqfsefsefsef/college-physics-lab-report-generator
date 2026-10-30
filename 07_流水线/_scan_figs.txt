@@ -1,0 +1,23 @@
+sections_hall.py  (0)
+sections_hfield.py  (0)
+sections_light.py  (0)
+sections_linear.py  (0)
+sections_malus.py  (0)
+sections_michelson.py  (0)
+sections_photo.py  (0)
+sections_prism.py  (0)
+sections_tension.py  (0)
+sections_tungsten.py  (0)
+sections_young.py  (0)
+--- experiments ---
+hall.json  霍尔效应及其应用  figures=0  []
+hfield.json  用霍尔效应测磁场  figures=0  []
+light.json  光速测定  figures=0  []
+linear.json  固体线膨胀系数的测定  figures=0  []
+malus.json  验证马吕斯定律  figures=0  []
+michelson.json  迈克耳孙干涉仪  figures=0  []
+photo.json  光电效应的研究  figures=0  []
+prism.json  用分光计测量三棱镜的折射率  figures=0  []
+tension.json  液体表面张力系数测定  figures=0  []
+tungsten.json  钨的逸出功测定  figures=5  [{'id': 'f1', 'caption': '实验线路原理示意图', 'src': 'fig_w_wiring.png'}, {'id': 'f2', 'caption': '阴极温度与灯丝电流的关系', 'src': 'fig_w_tcal.png'}, {'id': 'f3', 'caption': '不同灯丝电流下的阳极电流—阳极电压曲线', 'src': 'figures_tungsten/fig_w1.png'}, {'id': 'f4', 'caption': 'lg I_a–√U_a 外推求 lg I_s', 'src': 'figures_tungsten/fig_w2.png'}, {'id': 'f5', 'caption': 'lg(I_s/T²)–1/T 直线', 'src': 'figures_tungsten/fig_w3.png'}]
+young.json  用静态拉伸法测金属丝的杨氏弹性模量  figures=0  []

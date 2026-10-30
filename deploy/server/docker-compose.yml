@@ -1,0 +1,46 @@
+# 一键起服务：docker compose up -d --build
+#
+# 结构：
+#   bridge  —— 识别桥（Python，只有它能碰密钥；不对外开端口，只在内网被 web 反代）
+#   web     —— Caddy：静态页面 + /api/* 反代 + 自动 HTTPS
+#
+# 只要改 .env 再 `docker compose up -d` 即可生效，不用改这里。
+
+services:
+  bridge:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      BRIDGE_HOST: 0.0.0.0
+      BRIDGE_PORT: "8732"
+      PIPE_GEN: /app/assets
+      PIPE_BASE: /app/assets/template.docx
+    volumes:
+      # 生成物（docx / 中间 json / 上传的截图 / 作业样本）落在这里，容器重建也不丢
+      - ./data/projects:/app/pipeline/projects
+    expose:
+      - "8732"
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - bridge
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDR: ${SITE_ADDR}
+      BRIDGE_UPSTREAM: bridge:8732
+    volumes:
+      - ./app/web:/srv/web:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,25 @@
+keys: ['id', 'no', 'name', 'title', 'calc', 'checks', 'renderer', 'content', 'accepted_h', 'paradigm', 'objectives', 'formulas', 'tables', 'figures', 'errata', 'questions', 'prose_sections']
+tables: [
+ {
+  "id": "t1",
+  "caption": "表1 光电管的 U_AK~I_K 关系",
+  "unit_note": "U_AK/V；I/(10⁻¹¹A)；光阑 2mm 与 4mm",
+  "rows": "两个波长 435.8 nm、546.1 nm 各一行 U_AK 与其对应的 I",
+  "cols": "测量数组 1~23（U_AK 取 −4、−3、−2、−1、0、1、2、3、4、6、8、10、12、14、16、18、20、22、24、26、28、30 V）"
+ },
+ {
+  "id": "t2",
+  "caption": "表2 I_M—P 关系（U_AK＝30 V）",
+  "unit_note": "I_M/(10⁻¹¹A)",
+  "rows": "两个波长 435.8 nm、546.1 nm",
+  "cols": "光阑 Φ＝2/4/8 mm 三档的饱和电流"
+ },
+ {
+  "id": "t3",
+  "caption": "表3 U₀~ν 关系测量（Φ＝2 mm）",
+  "unit_note": "λ/nm；ν/(10¹⁴Hz)；U₀/V",
+  "rows": "3 次读数 + 平均值",
+  "cols": "5 个波长 365.0、404.7、435.8、546.1、577.0 nm（频率 ν 已由讲义印好，不用手填）"
+ }
+]
+formulas: {"F1": "*h*ν = ½*mv*² + *A*ₛ", "F2": "*eU*ₛ = ½*mv*²", "F3": "*eU*ₛ = *h*ν − *A*ₛ", "F4": "*U*ₛ = (*h*/*e*)ν − *A*ₛ/*e* = (*h*/*e*)(ν − ν₀)", "F5": "*h* = *eK*"}

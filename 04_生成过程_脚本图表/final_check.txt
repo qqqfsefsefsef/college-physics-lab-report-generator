@@ -1,0 +1,2 @@
+paras=126 tables=5 imgs=7 chars=9755
+bad=[]

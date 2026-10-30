@@ -1,0 +1,55 @@
+{
+  "exp": "tungsten",
+  "exp_name": "钨的逸出功测定",
+  "title": "钨的逸出功测定",
+  "date": "2026-10-13",
+  "created": "2026-10-27 11:48:31",
+  "formats": [
+    "docx",
+    "html"
+  ],
+  "gate": {
+    "confirmed": true,
+    "at": "2026-10-27 11:48:45",
+    "by": "已逐格核对：0.725/144V 保留 431；表2 2.08/12 保留 2.65",
+    "decisions": {
+      "accept_all": true
+    },
+    "blocked_before": []
+  },
+  "steps": {
+    "import": {
+      "at": "2026-10-27 11:48:31",
+      "src": "data_tungsten.json"
+    },
+    "review": {
+      "at": "2026-10-27 11:48:31",
+      "findings": 3,
+      "block": 0
+    },
+    "calc": {
+      "at": "2026-10-27 11:49:06",
+      "phi_eV": 4.385446998085724
+    },
+    "render": {
+      "at": "2026-10-27 11:49:46",
+      "formats": [
+        "docx",
+        "html"
+      ],
+      "files": [
+        "钨的逸出功测定.docx",
+        "钨的逸出功测定_打印版.html"
+      ]
+    }
+  },
+  "versions": {
+    "pipeline": "0.1",
+    "calc": "tungsten",
+    "template": "热膨胀系数.docx"
+  },
+  "model": {
+    "read": "stub/manual",
+    "write": "stub/manual"
+  }
+}
